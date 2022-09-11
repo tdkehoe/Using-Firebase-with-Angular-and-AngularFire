@@ -36,6 +36,8 @@ It will ask you for your email address associated with your Firebase account. Th
 
 If this doesn't work, open your Firebase console and make a new project. Call it `Greatest Computer Scientists`. Skip the Google Analytics.
 
+Create your Firestore database.
+
 ## Add Firebase config to `environments` variable
 
 In your [Firebase Console](https://console.firebase.google.com), under `Get started by adding Firebase to your app` select the web app `</>` icon. Register your app, again calling it `Greatest Computer Scientists`. You won't need `Firebase Hosting`, we'll just run the app locally.
@@ -99,7 +101,6 @@ import { FormsModule } from '@angular/forms';
 import { provideFirebaseApp, getApp, initializeApp } from '@angular/fire/app';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 
-
 @NgModule({
   declarations: [
     AppComponent
@@ -120,11 +121,14 @@ Keep an eye on the browser. If the homepage crashes, go back and see what's wron
 
 ## Inject `AngularFirestore` into Component Controller
 
-Open `/src/app/app.component.ts` and import the three AngularFire modules. In the `constructor` make a public variable for `Firestore`. This needs to be public so we can use Firestore in functions, not just in the constructor.
+Open `/src/app/app.component.ts` and import three AngularFire modules.
 
 ```ts
 import { Component } from '@angular/core';
-import { Firestore, collectionData, collection } from '@angular/fire/firestore';
+import { Firestore } from '@angular/fire/firestore';
+
+// Firebase Lite
+import { collection, addDoc } from '@firebase/firestore/lite';
 
 @Component({
   selector: 'app-root',
@@ -134,25 +138,122 @@ import { Firestore, collectionData, collection } from '@angular/fire/firestore';
 export class AppComponent {
   title = 'GreatestComputerScientists';
 
-  constructor(public firestore: Firestore) {}
+  constructor() {}
 }
 ```
 
-## Make a `Scientist` interface
+## Make the HTML view
 
-Make a scientist object:
+Now we'll make the view in `app.component.html`. Replace the placeholder view with:
 
-```ts
-interface Scientist {
-  name?: string,
-  born?: number,
-  accomplishment?: string
-};
+```html
+<h2>Greatest Computer Scientists</h2>
+
+<h3>Create</h3>
+<form (ngSubmit)="onCreate()">
+  <input type="text" [(ngModel)]="name" name="name" placeholder="Name" required>
+  <input type="text" [(ngModel)]="born" name="born" placeholder="Year born">
+  <input type="text" [(ngModel)]="accomplishment" name="accomplishment" placeholder="Accomplishment">
+  <button type="submit" value="Submit">Submit</button>
+</form>
 ```
 
-Note that all three fields are optional. Firestore collections don't convert into Typescript arrays unless the properties are optional. It has to do with the inherited `DocumentData` type.
+We're using an HTML form and the Angular `FormsModule`. The form is within the `<form></form>` directive.
 
-You can make a `type` instead of an interface, it doesn't matter.
+```html
+<form (ngSubmit)="onCreate()">
+</form>
+```
+
+The parentheses around `ngSubmit` creates one-way data binding from the view `app.component.html` to the controller `app.component.ts`. When the `Submit` button is clicked the function `onCreate()` executes in `app.component.ts`. We'll make this function next.
+
+Inside the form we have three text fields and a `Submit` button. The first text field has two-way data binding (parenthesis and brackets) using `ngModel` to the variable `name` in the controller. The second and third text fields bind to the variables `born` and `accomplishment`.
+
+Clicking the button executes `ngSubmit` and the function `onCreate()`.
 
 ## Add data to Firestore
 
+Now we'll add a handler function to write the data to database.
+
+```ts
+import { Component } from '@angular/core';
+import { Firestore } from '@angular/fire/firestore';
+
+// Firebase Lite
+import { collection, addDoc } from '@firebase/firestore/lite';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'GreatestComputerScientistsLite';
+
+  name: string | null = null;
+  born: number | null = null;
+  accomplishment: string | null = null;
+
+  constructor(public firestore: Firestore) {
+  }
+
+  async onCreate() {
+    try {
+      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
+        name: this.name,
+        born: this.born,
+        accomplishment: this.accomplishment
+      });
+      console.log("Document written with ID: ", docRef.id);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+```
+
+Enter this data in the HTML form and click `Submit`:
+
+```
+name [string]: Charles Babbage
+born [number]: 1791
+accomplishment [string]: Built first computer
+```
+
+Look in your Firestore console and you should see your data. Yay! Firebase is talking to your Angular app.
+
+### Clear form fields
+
+Notice that Charles Babbage is still in your HTML form fields. Lets's clear that data so that the forms are ready for another entry.
+
+```ts
+  async onCreate() {
+    try {
+      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
+        name: this.name,
+        born: this.born,
+        accomplishment: this.accomplishment
+      });
+      console.log("Document written with ID: ", docRef.id);
+      this.name = null;
+      this.born = null;
+      this.accomplishment = null;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+```
+ 
+## READ in the view
+ 
+Let's display the data in the HTML view. In `app.component.html`:
+
+```html
+<h3>Read</h3>
+<ul>
+    <li *ngFor="let scientist of scientists | async">
+        {{scientist.name}}, born {{scientist.born}}: {{scientist.accomplishment}}
+    </li>
+</ul>
+```
+ 
