@@ -244,16 +244,222 @@ Notice that Charles Babbage is still in your HTML form fields. Lets's clear that
   }
 ```
  
-## READ in the view
+## READ (once) in the view
  
-Let's display the data in the HTML view. In `app.component.html`:
+Let's display the data in the HTML view. In `app.component.html` add a button that gets the data from Firestore:
 
 ```html
-<h3>Read</h3>
+<h2>Greatest Computer Scientists</h2>
+
+<h3>Create</h3>
+<form (ngSubmit)="onCreate()">
+    <input type="text" [(ngModel)]="name" name="name" placeholder="Name" required>
+    <input type="text" [(ngModel)]="born" name="born" placeholder="Year born">
+    <input type="text" [(ngModel)]="accomplishment" name="accomplishment" placeholder="Accomplishment">
+    <button type="submit" value="Submit">Submit</button>
+</form>
+
+<h3>Read (once)</h3>
+<form (ngSubmit)="getData()">
+    <button type="submit" value="getData">Get Data</button>
+</form>
+```
+ 
+## READ (once) in the controller
+
+Add a variable `querySnapshot: any;` and a handler function:
+
+```ts
+async getData() {
+    console.log("Getting data!");
+    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
+    this.querySnapshot.forEach((doc: any) => {
+      console.log(`${doc.id} => ${doc.data().name}`);
+    });
+}
+```
+
+This should display the names of your favorite computer scientists in your console (and the ID strings of each document).
+
+Here's the complete code:
+
+```ts
+import { Component } from '@angular/core';
+import { Firestore, collectionData } from '@angular/fire/firestore';
+
+// Firebase Lite
+import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from '@firebase/firestore/lite';
+
+interface Scientist {
+  name?: string,
+  born?: number,
+  accomplishment?: string
+};
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'GreatestComputerScientistsLite';
+
+  name: string | null = null;
+  born: number | null = null;
+  accomplishment: string | null = null;
+  scientists: any;
+  querySnapshot: any;
+
+  constructor(public firestore: Firestore) {
+  }
+
+  async onCreate() {
+    try {
+      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
+        name: this.name,
+        born: this.born,
+        accomplishment: this.accomplishment
+      });
+      console.log("Document written with ID: ", docRef.id);
+      this.name = null;
+      this.born = null;
+      this.accomplishment = null;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async getData() {
+    console.log("Getting data!");
+    this.scientists = [];
+    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
+    this.querySnapshot.forEach((doc: any) => {
+      console.log(`${doc.id} => ${doc.data().name}`);
+    });
+  }
+
+}
+```
+
+### Displaying the data
+
+Let's display this data in the HTML form. Make an array and push the scientists into the array:
+
+```ts
+  async getData() {
+    console.log("Getting data!");
+    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
+    this.querySnapshot.forEach((doc: any) => {
+      console.log(`${doc.id} => ${doc.data().name}`);
+      this.scientists.push(doc.data());
+    });
+  }
+```
+
+Display the data in the HTML view:
+
+```html
+<h3>Read (once)</h3>
+<form (ngSubmit)="getData()">
+    <button type="submit" value="getData">Get Data</button>
+</form>
+
 <ul>
-    <li *ngFor="let scientist of scientists | async">
+    <li *ngFor="let scientist of scientists">
         {{scientist.name}}, born {{scientist.born}}: {{scientist.accomplishment}}
     </li>
 </ul>
 ```
- 
+
+OK, that works...but needs improvement. First, the TypseScript gods hate `any`. Let's make an interface (or a type, or choice).
+
+```ts
+interface Scientist {
+  name?: string,
+  born?: number,
+  accomplishment?: string
+};
+```
+
+Note that all the properties are optional. This prevents throwing an error that gets inherited from the `DocumentData` object.
+
+Now make an array of scientists. Initialize it as an empty array.
+
+```ts
+scientists: Scientist[] = [];
+```
+
+Now we can push objects into the array:
+
+```ts
+this.scientists.push(doc.data());
+```
+
+Get rid of the initial empty array:
+
+```ts
+this.scientists = [];
+```
+
+`querySnapshot` has to remain type `any`. It seems to be type `QuerySnapshot<DocumentData>`. I have no idea how to call that as a type.
+
+Here's the complete code so far:
+
+```ts
+import { Component } from '@angular/core';
+
+// Firebase
+import { Firestore, collectionData } from '@angular/fire/firestore';
+
+// Firebase Lite
+import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from '@firebase/firestore/lite';
+
+interface Scientist {
+  name?: string,
+  born?: number,
+  accomplishment?: string
+};
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'GreatestComputerScientistsLite';
+
+  name: string | null = null;
+  born: number | null = null;
+  accomplishment: string | null = null;
+
+  querySnapshot: any;
+  scientists: Scientist[] = [];
+
+  constructor(public firestore: Firestore) {
+  }
+
+  async onCreate() {
+    try {
+      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
+        name: this.name,
+        born: this.born,
+        accomplishment: this.accomplishment
+      });
+      console.log("Document written with ID: ", docRef.id);
+      this.name = null;
+      this.born = null;
+      this.accomplishment = null;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async getData() {
+    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
+    this.querySnapshot.forEach((doc: any) => {
+      this.scientists.push(doc.data());
+    });
+  }
+}
+```
+
