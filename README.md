@@ -257,7 +257,7 @@ Notice that Charles Babbage is still in your HTML form fields. Lets's clear that
 
 ### `set()` vs.`add()
 
-Note that the document identifier (ID) is a string of letters and numbers. `add()` automatically generates an ID string. If you want to make the document identifier yourself you use `set()`. It's just like `add()` except for a third parameter.
+Note that the document identifier (ID) is a string of letters and numbers. `add()` automatically generates an ID string. If you want to make the document identifier yourself you use `set()`.
 
 Let's make a second `Submit` button for `set()`.
 
@@ -281,33 +281,66 @@ Let's make a second `Submit` button for `set()`.
 </form>
 ```
 
-Import the `setDoc` module to the controller.
+Import the `setDoc` and `doc` modules to the controller.
 
 ```ts
-import { Firestore, addDoc, setDoc, getDocs, collectionData, collection } from '@angular/fire/firestore';
+import { Firestore, addDoc, setDoc, doc, getDocs, collectionData, collection } from '@angular/fire/firestore';
 ```
 
-Add the handler function in the controller. The only differences are the name of the function and the third parameter of `setDoc(collection())`.
+We'll make a new set of variables for `set()`.
 
 ```ts
-async onSet() {
+nameSet: string = '';
+bornSet: number | null = null;
+accomplishmentSet: string | null = null;
+```
+
+Add the handler function in the controller. Note the third parameter of `setDoc(collection())`.
+
+```ts
+  async onSet() {
     try {
-      const docRef = await setDoc(collection(this.firestore, 'scientists', this.name), {
-        name: this.name,
-        born: this.born,
-        accomplishment: this.accomplishment
+      await setDoc(doc(this.firestore, 'scientists', this.nameSet), {
+        name: this.nameSet,
+        born: this.bornSet,
+        accomplishment: this.accomplishmentSet
       });
-      console.log("Document written with ID: ", docRef.id);
-      this.name = null;
-      this.born = null;
-      this.accomplishment = null;
+      this.nameSet = '';
+      this.bornSet = null;
+      this.accomplishmentSet = null;
     } catch (error) {
       console.error(error);
     }
-}
+  }
 ```
+
+A difference between `add()` and `set()` is that `set()` can update or overwrite a record. Use `Create (set)` to enter a new record:
+
+```
+Howard Aiken, 1900, Built IBM's Harvard Mark I electromechanical computer
+```
+
+I like this quote from Howard Aiken:
+
+```
+Don't worry about people stealing an idea. If it's original, you will have to ram it down their throats.
+```
+
+Now enter this data in both `Create (add)` and `Create (set)`:
+
+```
+Howard Aiken, 2000, First baby raised speaking only JavaScript
+```
+
+You should see different results. `add()` created a new record for Howard Aiken's millenial great-grandchild. `set()` updated the original Howard Aiken record.
+
+### Coding differences between `add()` and `set()`
+
+* Import `doc` and `setDoc` modules.
+* Third parameter in `setDoc(doc())` for document identifier.
+* Document identifier can't be null. Note that we initialized `nameSet` with an empty string `''`, not `null`.
  
-## READ (once) in the view
+## READ in the view
  
 Let's display the data in the HTML view. In `app.component.html` add a button that gets the data from Firestore:
 
@@ -322,13 +355,13 @@ Let's display the data in the HTML view. In `app.component.html` add a button th
     <button type="submit" value="Submit">Submit</button>
 </form>
 
-<h3>Read (once)</h3>
+<h3>Read</h3>
 <form (ngSubmit)="getData()">
     <button type="submit" value="getData">Get Data</button>
 </form>
 ```
  
-## READ (once) in the controller
+## READ in the controller
 
 Add a variable `querySnapshot: any;` and a handler function:
 
@@ -522,7 +555,7 @@ export class AppComponent {
 }
 ```
 
-## READ (observer) in the controller
+## OBSERVE in the controller
 
 Let's get rid of that `Get Data` button. This is 2022, we're not using SQL!
 
@@ -593,7 +626,7 @@ export class AppComponent {
 }
 ```
 
-### READ (observer) in the view
+### OBSERVE in the view
 
 In the HTML view, repeat the `*ngFor` data display, with three changes. First, no button. Second, change `scientists` to `scientist$`. Third, add `| async`.
 
@@ -608,7 +641,7 @@ In the HTML view, repeat the `*ngFor` data display, with three changes. First, n
     <button type="submit" value="Submit">Submit</button>
 </form>
 
-<h3>Read (once)</h3>
+<h3>Read</h3>
 <form (ngSubmit)="getData()">
     <button type="submit" value="getData">Get Data</button>
 </form>
@@ -619,7 +652,7 @@ In the HTML view, repeat the `*ngFor` data display, with three changes. First, n
     </li>
 </ul>
 
-<h3>Read (observable)</h3>
+<h3>Observe</h3>
 <ul>
     <li *ngFor="let scientist of scientist$ | async">
         {{scientist.name}}, born {{scientist.born}}: {{scientist.accomplishment}}
