@@ -1,8 +1,19 @@
 # Using Firebase with Angular and AngularFire
 
-This tutorial will make a simple Angular app that uses the Firebase Firestore cloud database. We'll start with Firestore Lite, which only handles CRUD--Create, Read, Update, Delete--operations and is up to 80% lighter, and then we'll do realtime updates.
+This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses the Firebase Firestore cloud database, plus we'll make an Observable READ that will display realtime updates.
 
-This project uses Angular 14, AngularFire 7.4, and Firebase Web version 9 (modular). 
+This project uses Angular 14, AngularFire 7.4, and Firebase Web version 9 (modular).
+
+Here is the data we will use:
+
+```
+Charles Babbage, born 1791: Built first computer
+Ada Lovelace, born 1815: Wrote first software for Charles Babbage's computer
+Alan Turing, born 1912: First theorized computers with memory and instructions, i.e., general-purpose computers
+John von Neumann, born 1903: Built first general-purpose computer with memory and instructions
+Donald Knuth, born 1938: Father of algorithm analysis
+Jeff Dean, born 1968: Google's smartest computer scientist
+```
 
 ## Create a new project
 
@@ -98,8 +109,8 @@ import { environment } from '../environments/environment'; // access firebaseCon
 import { FormsModule } from '@angular/forms';
 
 // AngularFire
-import { provideFirebaseApp, getApp, initializeApp } from '@angular/fire/app';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 
 @NgModule({
   declarations: [
@@ -171,7 +182,7 @@ Inside the form we have three text fields and a `Submit` button. The first text 
 
 Clicking the button executes `ngSubmit` and the function `onCreate()`.
 
-## Add data to Firestore
+## Add data to Firestore with `add()`
 
 Now we'll add a handler function to write the data to database.
 
@@ -242,6 +253,58 @@ Notice that Charles Babbage is still in your HTML form fields. Lets's clear that
       console.error(error);
     }
   }
+```
+
+### `set()` vs.`add()
+
+Note that the document identifier (ID) is a string of letters and numbers. `add()` automatically generates an ID string. If you want to make the document identifier yourself you use `set()`. It's just like `add()` except for a third parameter.
+
+Let's make a second `Submit` button for `set()`.
+
+```html
+<h2>Greatest Computer Scientists</h2>
+
+<h3>Create (add)</h3>
+<form (ngSubmit)="onCreate()">
+    <input type="text" [(ngModel)]="name" name="name" placeholder="Name" required>
+    <input type="text" [(ngModel)]="born" name="born" placeholder="Year born">
+    <input type="text" [(ngModel)]="accomplishment" name="accomplishment" placeholder="Accomplishment">
+    <button type="submit" value="Submit">Submit</button>
+</form>
+
+<h3>Create (set)</h3>
+<form (ngSubmit)="onSet()">
+    <input type="text" [(ngModel)]="name" name="name" placeholder="Name" required>
+    <input type="text" [(ngModel)]="born" name="born" placeholder="Year born">
+    <input type="text" [(ngModel)]="accomplishment" name="accomplishment" placeholder="Accomplishment">
+    <button type="submit" value="Submit">Submit</button>
+</form>
+```
+
+Import the `setDoc` module to the controller.
+
+```ts
+import { Firestore, addDoc, setDoc, getDocs, collectionData, collection } from '@angular/fire/firestore';
+```
+
+Add the handler function in the controller. The only differences are the name of the function and the third parameter of `setDoc(collection())`.
+
+```ts
+async onSet() {
+    try {
+      const docRef = await setDoc(collection(this.firestore, 'scientists', this.name), {
+        name: this.name,
+        born: this.born,
+        accomplishment: this.accomplishment
+      });
+      console.log("Document written with ID: ", docRef.id);
+      this.name = null;
+      this.born = null;
+      this.accomplishment = null;
+    } catch (error) {
+      console.error(error);
+    }
+}
 ```
  
 ## READ (once) in the view
@@ -409,10 +472,7 @@ Here's the complete code so far:
 import { Component } from '@angular/core';
 
 // Firebase
-import { Firestore, collectionData } from '@angular/fire/firestore';
-
-// Firebase Lite
-import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from '@firebase/firestore/lite';
+import { Firestore, addDoc, getDocs, collectionData, collection } from '@angular/fire/firestore';
 
 interface Scientist {
   name?: string,
@@ -435,7 +495,77 @@ export class AppComponent {
   querySnapshot: any;
   scientists: Scientist[] = [];
 
+  constructor(public firestore: Firestore) {}
+
+  async onCreate() {
+    try {
+      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
+        name: this.name,
+        born: this.born,
+        accomplishment: this.accomplishment
+      });
+      console.log("Document written with ID: ", docRef.id);
+      this.name = null;
+      this.born = null;
+      this.accomplishment = null;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async getData() {
+    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
+    this.querySnapshot.forEach((doc: any) => {
+      this.scientists.push(doc.data());
+    });
+  }
+}
+```
+
+## READ (observer) in the controller
+
+Let's get rid of that `Get Data` button. This is 2022, we're not using SQL!
+
+Import `Observable` from `rxjs`. Make an instantiation of the `Observable` class, call it `scientist$`, and set the type as an array of `Scientist` elements: 
+
+```ts
+scientist$: Observable<Scientist[]>;
+```
+
+Here's the complete code:
+
+```ts
+import { Component } from '@angular/core';
+import { Observable } from 'rxjs';
+
+// Firebase
+import { Firestore, addDoc, getDocs, collectionData, collection } from '@angular/fire/firestore';
+
+interface Scientist {
+  name?: string,
+  born?: number,
+  accomplishment?: string
+};
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'GreatestComputerScientistsLite';
+
+  name: string | null = null;
+  born: number | null = null;
+  accomplishment: string | null = null;
+
+  querySnapshot: any;
+  scientists: Scientist[] = [];
+  scientist$: Observable<Scientist[]>;
+
   constructor(public firestore: Firestore) {
+    const myCollection = collection(firestore, 'scientists');
+    this.scientist$ = collectionData(myCollection);
   }
 
   async onCreate() {
@@ -462,4 +592,44 @@ export class AppComponent {
   }
 }
 ```
+
+### READ (observer) in the view
+
+In the HTML view, repeat the `*ngFor` data display, with three changes. First, no button. Second, change `scientists` to `scientist$`. Third, add `| async`.
+
+```html
+<h2>Greatest Computer Scientists</h2>
+
+<h3>Create</h3>
+<form (ngSubmit)="onCreate()">
+    <input type="text" [(ngModel)]="name" name="name" placeholder="Name" required>
+    <input type="text" [(ngModel)]="born" name="born" placeholder="Year born">
+    <input type="text" [(ngModel)]="accomplishment" name="accomplishment" placeholder="Accomplishment">
+    <button type="submit" value="Submit">Submit</button>
+</form>
+
+<h3>Read (once)</h3>
+<form (ngSubmit)="getData()">
+    <button type="submit" value="getData">Get Data</button>
+</form>
+
+<ul>
+    <li *ngFor="let scientist of scientists">
+        {{scientist.name}}, born {{scientist.born}}: {{scientist.accomplishment}}
+    </li>
+</ul>
+
+<h3>Read (observable)</h3>
+<ul>
+    <li *ngFor="let scientist of scientist$ | async">
+        {{scientist.name}}, born {{scientist.born}}: {{scientist.accomplishment}}
+    </li>
+</ul>
+```
+
+You should now see the data without clicking the button, and then the same data when you click the button. Add another record and watch it change in real time. Try to make MongoDB do that!
+
+
+
+
 
