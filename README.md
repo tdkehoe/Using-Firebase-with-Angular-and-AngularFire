@@ -1,6 +1,6 @@
 # Using Firebase with Angular and AngularFire
 
-This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses the Firebase Firestore cloud database, plus we'll make an Observable READ that will display realtime updates.
+This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses the Firebase Firestore cloud database, plus we'll make an OBSERVE that will display realtime updates.
 
 This project uses Angular 14, AngularFire 7.4, and Firebase Web version 9 (modular).
 
@@ -661,6 +661,52 @@ In the HTML view, repeat the `*ngFor` data display, with three changes. First, n
 ```
 
 You should now see the data without clicking the button, and then the same data when you click the button. Add another record and watch it change in real time. Try to make MongoDB do that!
+
+## DELETE in the view
+
+Now we'll add the Delete service to `app.component.html`:
+
+```html
+<h3>Delete</h3>
+<form (ngSubmit)="onDelete()">
+    <select name="scientist" [(ngModel)]="selection">
+    <option *ngFor="let scientist of scientist$ | async" [ngValue]="scientist.name">
+      {{ scientist.name }}
+    </option>
+  </select>
+
+    <button type="submit" value="Submit">Delete</button>
+</form>
+```
+
+This form has a `<select><option>` dropdown menu for selecting a computer scientist to delete. In this we use Angular's `*ngFor` again. Unlike the READ service we must include `[ngValue]="scientist.name"` in the Delete service. Without this your selection isn't passed back to the controller.
+
+## DELETE in the controller
+
+First, import the `deleteDoc` module.
+
+```ts
+import { Firestore, addDoc, doc, setDoc, getDocs, collectionData, collection, deleteDoc } from '@angular/fire/firestore';
+```
+
+Add a variable for the selection.
+
+```ts
+selection: string = '';
+```
+
+Then make a handler function.
+
+```ts
+async onDelete() {
+    await deleteDoc(doc(this.firestore, 'scientists', this.selection));
+    this.selection = '';
+}
+```
+
+Works great...on the records that we entered with `set()`, where the document identifier is the same as the `name` field. That's a lesson in data structure: use `set()`, not `add()`, for records that may need to be deleted, and make a `name` or `identifier` field with the same document's identifier.
+
+For documents with auto-generated document identifiers we'll have to do a query to find the document identifier.
 
 
 
