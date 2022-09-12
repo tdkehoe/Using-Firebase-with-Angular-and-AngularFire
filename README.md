@@ -706,8 +706,95 @@ async onDelete() {
 
 Works great...on the records that we entered with `set()`, where the document identifier is the same as the `name` field. That's a lesson in data structure: use `set()`, not `add()`, for records that may need to be deleted, and make a `name` or `identifier` field with the same document's identifier.
 
+### DELETE by auto-generated document identifier
+
 For documents with auto-generated document identifiers we'll have to do a query to find the document identifier.
 
+Import the `collection`, `query`, and `where` modules.
+
+```ts
+import { Firestore, addDoc, doc, setDoc, getDocs, collectionData, collection, deleteDoc, query, where } from '@angular/fire/firestore';
+```
+
+We'll need these variables:
+
+```ts
+q: any;
+querySnapshot: any;
+```
+
+And the handler function. Let's make a smelly function first:
+
+```ts
+async onDelete() {
+    console.log(this.selection);
+    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
+    this.querySnapshot = await getDocs(this.q);
+    this.querySnapshot.forEach((doc: any) => {
+      console.log(doc.id, ' => ', doc.data());
+      deleteDoc(doc(this.firestore, 'scientists', doc.id));
+    });
+}
+```
+
+Do you see the problem? Look at this line:
+
+```ts
+deleteDoc(doc(this.firestore, 'scientists', doc.id));
+```
+
+`doc` is both a Firestore module and the elements in the array being iterated. I've sent feedback to the Firebase team suggesting renaming the module `document` (to go with `collection`).
+
+We can't rename the Firestore module so we'll have change the name of the elements in the array.
+
+```ts
+async onDelete() {
+    console.log(this.selection);
+    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
+    this.querySnapshot = await getDocs(this.q);
+    this.querySnapshot.forEach((docElement: any) => {
+      console.log(docElement.id, ' => ', docElement.data());
+      deleteDoc(doc(this.firestore, 'scientists', docElement.id));
+    });
+}
+```
+
+This will delete all documents with the selected name. My database had several `Charles Babbage` documents. Now they're all gone. :-)
+
+
+
+
+
+
+
+```ts
+async onDelete() {
+    console.log(this.selection);
+    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
+    this.querySnapshot = await getDocs(this.q);
+    this.querySnapshot.forEach((docElement: any) => {
+      console.log(docElement.id, ' => ', docElement.data());
+      deleteDoc(doc(this.firestore, 'scientists', docElement.id));
+    });
+}
+```
+
+Note that the Firestore documentation uses `doc.id`:
+
+```ts
+querySnapshot.forEach((doc) => {
+  console.log(doc.id, " => ", doc.data());
+});
+```
+
+
+
+
+
+
+
+
+Now the user can select a computer scientist from the list and the document identifier logs in the console. Add 
 
 
 
