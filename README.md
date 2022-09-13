@@ -435,8 +435,6 @@ This should display the names of your favorite computer scientists in your conso
 
 Note that `getDocs()` doesn't get a document. It gets a collection. Why isn't it called `getCollection()`?
 
-
-
 Here's the complete code:
 
 ```ts
@@ -640,6 +638,7 @@ Import `Observable` from `rxjs`. Make an instantiation of the `Observable` class
 ```ts
 scientist$: Observable<Scientist[]>;
 ```
+Note that there's no handler function. The user doesn't click a button. The data just displays.
 
 Here's the complete code:
 
