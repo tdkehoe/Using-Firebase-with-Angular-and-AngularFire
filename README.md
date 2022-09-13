@@ -2,7 +2,7 @@
 
 This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses Google's Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
 
-This project uses Angular 14, AngularFire 7.4, and Firebase Web version 9 (modular).
+This project uses Angular 14, AngularFire 7.4, and Firebase Web version 9 (modular). No CSS or styling is taught.
 
 Here is the data we will use:
 
@@ -876,3 +876,259 @@ The TypeScript gods hate it when we use `any` but collections and documents retu
 
 Firestore has a [data converter feature to make custom objects](https://firebase.google.com/docs/firestore/manage-data/add-data#custom_objects) but I don't see how this will get rid of `any` here.
 
+## Complete finished code
+
+Please send pull requests if you find mistakes.
+
+This Angular app has four modified files.
+
+### `environments/environment.ts`
+
+```ts
+export const environment = {
+  production: false,
+  firebaseConfig: {
+    apiKey: "abc123",
+    authDomain: "myCRUDyApp.firebaseapp.com",
+    projectId: "myCRUDyApp",
+    storageBucket: "myCRUDyApp.appspot.com",
+    messagingSenderId: "12345",
+    appId: "1:12345:web:abcde"
+  }
+};
+```
+
+### `app.module.ts`
+
+```ts
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppComponent } from './app.component';
+import { environment } from '../environments/environment'; // access firebaseConfig
+
+// Angular
+import { FormsModule } from '@angular/forms';
+
+// AngularFire
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    FormsModule,
+    provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
+    provideFirestore(() => getFirestore()),
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+```
+
+### `app.component.html`
+
+```ts
+<h2>Greatest Computer Scientists</h2>
+
+<h3>Create (add)</h3>
+<form (ngSubmit)="onCreate()">
+    <input type="text" [(ngModel)]="name" name="name" placeholder="Name" required>
+    <input type="text" [(ngModel)]="born" name="born" placeholder="Year born">
+    <input type="text" [(ngModel)]="accomplishment" name="accomplishment" placeholder="Accomplishment">
+    <button type="submit" value="Submit">Submit</button>
+</form>
+
+<h3>Create (set)</h3>
+<form (ngSubmit)="onSet()">
+    <input type="text" [(ngModel)]="nameSet" name="name" placeholder="Name" required>
+    <input type="text" [(ngModel)]="bornSet" name="born" placeholder="Year born">
+    <input type="text" [(ngModel)]="accomplishmentSet" name="accomplishment" placeholder="Accomplishment">
+    <button type="submit" value="Submit">Submit</button>
+</form>
+
+<h3>Read</h3>
+<form (ngSubmit)="getData()">
+    <button type="submit" value="getData">Get Data</button>
+</form>
+
+<ul>
+    <li *ngFor="let scientist of scientists">
+        {{scientist.name}}, born {{scientist.born}}: {{scientist.accomplishment}}
+    </li>
+</ul>
+
+<h3>Observe</h3>
+<ul>
+    <li *ngFor="let scientist of scientist$ | async">
+        {{scientist.name}}, born {{scientist.born}}: {{scientist.accomplishment}}
+    </li>
+</ul>
+
+<form (ngSubmit)="detachListener()">
+    <button type="submit" value="detachListener">Detach Listener</button>
+</form>
+
+<h3>Update</h3>
+<form (ngSubmit)="onSelect()">
+    <select name="scientist" [(ngModel)]="selectionUpdate">
+        <option *ngFor="let scientist of scientist$ | async" [ngValue]="scientist.name">
+            {{ scientist.name }}
+        </option>
+    </select>
+
+    <input type="text" [(ngModel)]="bornUpdate" name="born" placeholder="Year born">
+    <input type="text" [(ngModel)]="accomplishmentUpdate" name="accomplishment" placeholder="Accomplishment">
+
+    <button type="submit" value="Submit">Select</button>
+</form>
+
+<form (ngSubmit)="onUpdate()">
+    <button type="submit" value="Update">Update</button>
+</form>
+
+<h3>Delete</h3>
+<form (ngSubmit)="onDelete()">
+    <select name="scientist" [(ngModel)]="selection">
+        <option *ngFor="let scientist of scientist$ | async" [ngValue]="scientist.name">
+            {{scientist.name}}
+        </option>
+    </select>
+
+    <button type="submit" value="Submit">Delete</button>
+</form>
+```
+
+### `app.component.ts`
+
+```ts
+import { Component } from '@angular/core';
+import { Observable } from 'rxjs';
+
+// Firebase
+import { Firestore, addDoc, doc, setDoc, getDocs, collectionData, collection, deleteDoc, query, where, updateDoc, onSnapshot } from '@angular/fire/firestore';
+
+interface Scientist {
+  name?: string | null,
+  born?: number | null,
+  accomplishment?: string | null
+};
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'GreatestComputerScientistsLite';
+
+  name: string | null = null;
+  born: number | null = null;
+  accomplishment: string | null = null;
+  nameSet: string = '';
+  bornSet: number | null = null;
+  accomplishmentSet: string | null = null;
+  nameUpdate: string = '';
+  bornUpdate: number | null = null;
+  accomplishmentUpdate: string | null = null;
+
+  querySnapshot: any;
+  scientists: Scientist[] = [];
+  scientist$: Observable<Scientist[]>;
+
+  selection: string = '';
+
+  q: any;
+  deleteID: string = '';
+  deleteIDarray: string[] = [];
+
+  selectionUpdate: string = '';
+
+  constructor(public firestore: Firestore) {
+    const myCollection = collection(firestore, 'scientists');
+    this.scientist$ = collectionData(myCollection);
+  }
+
+  async onCreate() {
+    try {
+      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
+        name: this.name,
+        born: this.born,
+        accomplishment: this.accomplishment
+      });
+      console.log("Document written with ID: ", docRef.id);
+      this.name = null;
+      this.born = null;
+      this.accomplishment = null;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async onSet() {
+    try {
+      await setDoc(doc(this.firestore, 'scientists', this.nameSet), {
+        name: this.nameSet,
+        born: this.bornSet,
+        accomplishment: this.accomplishmentSet
+      });
+      this.nameSet = '';
+      this.bornSet = null;
+      this.accomplishmentSet = null;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async getData() {
+    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
+    this.querySnapshot.forEach((document: any) => {
+      this.scientists.push(document.data());
+    });
+  }
+
+  async onSelect() {
+    console.log(this.selectionUpdate);
+    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selectionUpdate));
+    this.querySnapshot = await getDocs(this.q);
+    this.querySnapshot.forEach((document: any) => {
+      console.log(document.id, ' => ', document.data());
+      this.nameUpdate = document.data().name;
+      this.bornUpdate = document.data().born;
+      this.accomplishmentUpdate = document.data().accomplishment;
+    });
+  }
+
+  async onUpdate() {
+    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.nameUpdate));
+    this.querySnapshot = await getDocs(this.q);
+    this.querySnapshot.forEach((document: any) => {
+      console.log(document.id, ' => ', document.data());
+      this.nameUpdate = document.id;
+    });
+    await updateDoc(doc(this.firestore, 'scientists', this.nameUpdate), {
+      born: this.bornUpdate,
+      accomplishment: this.accomplishmentUpdate,
+    });
+    this.bornUpdate = null;
+    this.accomplishmentUpdate = null;
+  }
+
+  async onDelete() {
+    console.log(this.selection);
+    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
+    this.querySnapshot = await getDocs(this.q);
+    this.querySnapshot.forEach((document: any) => {
+      console.log(document.id, ' => ', document.data());
+      deleteDoc(doc(this.firestore, 'scientists', document.id));
+    });
+  }
+
+  async detachListener() {
+    console.log("This function doesn't work.");
+  }
+}
+```
