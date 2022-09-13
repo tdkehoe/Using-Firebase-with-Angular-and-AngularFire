@@ -834,4 +834,10 @@ async onUpdate() {
 }
 ```
 
-We have two handler functions, for the two buttons. `onSelect()` takes the name that the user selects and gets the data from the document. The user can then edit the data. The user clicks `onUpdate()` which finds the document by the `name` field and gets the document identifier. The document identifier is then used to in `updateDoc()`
+We have two handler functions, for the two buttons. `onSelect()` takes the name that the user selects and gets the data from the document. The user can then edit the data. The user clicks `onUpdate()` which finds the document by the `name` field and gets the document identifier. The document identifier is then used in `updateDoc()`.
+
+OK, I'm not proud of this `UPDATE` function. Because some documents have their document identifier matching the `name` field but other documents have a random string for their document identifier it's not possible to update the `name` field. In a real app the document identifiers would be standardized one way or the other. The two buttons are a poor user interface. In a real app the `Submit` button would be gone, with realtime data filling the view fields. `UPDATE` may seem like a simple CRUD function but it's actually the most complex because it has to let the user select a document, update one or more fields, without changing the document identifier.
+
+
+
+
