@@ -1,6 +1,6 @@
 # Using Firebase with Angular and AngularFire
 
-This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses the Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
+This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses Google's Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
 
 This project uses Angular 14, AngularFire 7.4, and Firebase Web version 9 (modular).
 
@@ -469,7 +469,7 @@ Display the data in the HTML view:
 </ul>
 ```
 
-OK, that works...but needs improvement. First, the TypseScript gods hate `any`. Let's make an interface (or a type, or choice).
+OK, that works...but needs improvement. First, the TypseScript gods hate `any`. Let's make an `interface` (or a `type`, your choice).
 
 ```ts
 interface Scientist {
@@ -500,6 +500,20 @@ this.scientists = [];
 ```
 
 `querySnapshot` has to remain type `any`. It seems to be type `QuerySnapshot<DocumentData>`. I have no idea how to call that as a type.
+
+### Query to get multiple documents
+
+We'll use `query` and `where` in the DELETE and UPDATE sections to get multiple documents. 
+
+### Order and limit data
+
+By default the data is ordered by the document identifier. You can [order your data differently or limit the number of documents](https://firebase.google.com/docs/firestore/query-data/order-limit-data) returned.
+
+### Using the Firebase data converter to make custom objects
+
+We won't do it here but if you need to do stuff with your downloaded documents other than to display them in the HTML view, you may want to convert your documents into the `Scientist` type we just made. Firestore has a [data converter](https://firebase.google.com/docs/firestore/query-data/get-data#custom_objects) to make custom objects.
+
+### Complete code so far
 
 Here's the complete code so far:
 
@@ -664,6 +678,10 @@ In the HTML view, repeat the `*ngFor` data display, with three changes. First, n
 
 You should now see the data without clicking the button, and then the same data when you click the button. Add another record and watch it change in real time. Try to make MongoDB do that!
 
+### Detach a listener
+
+When you no longer need to observe a collection, [detach the listener](https://firebase.google.com/docs/firestore/query-data/listen#detach_a_listener) to reduce your bandwidth. I can't figure out how to do this.
+
 ## DELETE in the view
 
 Now we'll add the Delete service to `app.component.html`:
@@ -725,7 +743,9 @@ q: any;
 querySnapshot: any;
 ```
 
-And the handler function. Let's make a smelly function first:
+These variables are type `any` because they will handle collections returned from Firestore. I don't know what type a collection is.
+
+Now we'll make the handler function. Let's make a smelly function first:
 
 ```ts
 async onDelete() {
@@ -762,6 +782,18 @@ async onDelete() {
 ```
 
 This will delete all documents with the selected name. My database had several `Charles Babbage` documents. Now they're all gone. :-)
+
+More about filtering queries with [where()](https://firebase.google.com/docs/firestore/query-data/queries).
+
+### DELETE fields, collections, and subcollections
+
+Our `DELETE` functions deletes documents. 
+
+To delete fields in documents use [deleteField()](https://firebase.google.com/docs/firestore/manage-data/delete-data#fields). 
+
+If a field in a document is a collection, i.e., a subcollection, the documents in those subcollections won't be deleted with the parent document. You'll have to search for and delete each document in a subcollection, or delete the subcollection from the Firebase Console.
+
+Delete collections from the Firebase Console. Don't try to delete collections from a web client.
 
 ## UPDATE in the view
 
@@ -838,13 +870,9 @@ We have two handler functions, for the two buttons. `onSelect()` takes the name 
 
 OK, I'm not proud of this `UPDATE` function. Because some documents have their document identifier matching the `name` field but other documents have a random string for their document identifier it's not possible to update the `name` field. In a real app the document identifiers would be standardized one way or the other. The two buttons are a poor user interface. In a real app the `Submit` button would be gone, with realtime data filling the view fields. `UPDATE` may seem like a simple CRUD function but it's actually the most complex because it has to let the user select a document, update one or more fields, without changing the document identifier.
 
-## `any` Type
+## `any` Type for returned collections and documents
 
-A frustrating part of using Firebase with Typescript is handling the returning collections and documents without using the data type `any`. I found these variables typed as `any` in our controller:
-
-* `querySnapshot` receives the collection `scientists` in the `getDocs()` data READ once function
-* `q` receives the collection that results from a query, i.e., a subset of the complete collection in the database
-* `document` is an document in an collection. `document.data` is type `Scientist` but `document` has additional properties.
+The TypeScript gods hate it when we use `any` but collections and documents returned from Firestore are type `any`, as far as I know. You sent data to Firestore as a `Scientist` custom type but it comes back as a document in which the data you sent is now `document.data`, i.e., Firestore puts a container around your data. 
 
 Firestore has a [data converter feature to make custom objects](https://firebase.google.com/docs/firestore/manage-data/add-data#custom_objects) but I don't see how this will get rid of `any` here.
 
