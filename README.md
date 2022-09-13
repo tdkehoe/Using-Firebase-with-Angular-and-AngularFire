@@ -8,10 +8,12 @@ Here is the data we will use:
 
 ```
 Charles Babbage, born 1791: Built first computer
-Ada Lovelace, born 1815: Wrote first software for Charles Babbage's computer
-Alan Turing, born 1912: First theorized computers with memory and instructions, i.e., general-purpose computers
+Ada Lovelace, born 1815: Wrote first software
+Howard Aiken, 1900: Built IBM's Harvard Mark I electromechanical computer
 John von Neumann, born 1903: Built first general-purpose computer with memory and instructions
+Alan Turing, born 1912: First theorized computers with memory and instructions, i.e., general-purpose computers
 Donald Knuth, born 1938: Father of algorithm analysis
+Robert Sanders, born 1938: Invented generalized dynamic instruction handling
 Jeff Dean, born 1968: Google's smartest computer scientist
 ```
 
@@ -799,8 +801,6 @@ Make some more variables:
 nameUpdate: string = '';
 bornUpdate: number | null = null;
 accomplishmentUpdate: string | null = null;
-  
-update: any;
 selectionUpdate: string = '';
 ```
 
@@ -838,6 +838,14 @@ We have two handler functions, for the two buttons. `onSelect()` takes the name 
 
 OK, I'm not proud of this `UPDATE` function. Because some documents have their document identifier matching the `name` field but other documents have a random string for their document identifier it's not possible to update the `name` field. In a real app the document identifiers would be standardized one way or the other. The two buttons are a poor user interface. In a real app the `Submit` button would be gone, with realtime data filling the view fields. `UPDATE` may seem like a simple CRUD function but it's actually the most complex because it has to let the user select a document, update one or more fields, without changing the document identifier.
 
+## Custom Objects and Data Converters
 
+One of the most frustrating parts of using Firebase with Typescript is handling the returning data without using the data type `any`. I count six variables typed as `any` in our controller:
+
+* `querySnapshot` receives the collection `scientists` in the `getDocs()` data READ once function
+* `q` receives the collection that results from a query, i.e., a subset of the complete collection in the database
+* `doc`, `docElement`, `docElement`, and `docElement` are the elements (scientists) of these collections when we iterate through the collections using `forEach()`.
+
+All of these are type `Scientist` or are arrays of `Scientist` elements. Let's get rid of these `any` types. 
 
 
