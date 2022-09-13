@@ -374,7 +374,7 @@ In `app.component.html` add a button that allows you to select a computer scient
 <h3>Read (one document, once)</h3>
 
 <form (ngSubmit)="getDocument()">
-    <select name="scientist" [(ngModel)]="selectionGetDocument">
+    <select name="scientist" [(ngModel)]="documentID">
         <option *ngFor="let scientist of scientist$ | async" [ngValue]="scientist.name">
             {{ scientist.name }}
         </option>
@@ -397,6 +397,7 @@ import { doc, getDoc } from '@angular/fire/firestore';
 Make some variables.
 
 ```ts
+documentID: string = '';
 docSnap: any;
 docSnapName: string = '';
 docSnapBorn: number | null = null;
@@ -407,10 +408,10 @@ Make the handler function.
 
 ```ts
 async getDocument() {
-    this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.selectionGetDocument));
+    this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.documentID));
     this.docSnapName = this.docSnap.data().name;
     this.docSnapBorn = this.docSnap.data().born;
-    this.docSnapAccomplishment = this.docSnap.data().accomplishment;
+    this.documentID = this.docSnap.data().accomplishment;
 }
 ```
 
@@ -1021,9 +1022,24 @@ export class AppModule { }
     <button type="submit" value="Submit">Submit</button>
 </form>
 
-<h3>Read</h3>
+<h3>Read (one document, once)</h3>
+
+<form (ngSubmit)="getDocument()">
+    <select name="scientist" [(ngModel)]="documentID">
+        <option *ngFor="let scientist of scientist$ | async" [ngValue]="scientist.name">
+            {{ scientist.name }}
+        </option>
+    </select>
+
+    <button type="submit" value="Submit">Get Document</button>
+</form>
+
+{{ docSnapName }}, born {{docSnapBorn}}: {{docSnapAccomplishment}}
+
+<h3>Read (collection of documents, once)</h3>
+
 <form (ngSubmit)="getData()">
-    <button type="submit" value="getData">Get Data</button>
+    <button type="submit" value="getData">Get Collection</button>
 </form>
 
 <ul>
@@ -1080,7 +1096,7 @@ import { Component } from '@angular/core';
 import { Observable } from 'rxjs';
 
 // Firebase
-import { Firestore, addDoc, doc, setDoc, getDocs, collectionData, collection, deleteDoc, query, where, updateDoc, onSnapshot } from '@angular/fire/firestore';
+import { Firestore, addDoc, doc, setDoc, getDoc, getDocs, collectionData, collection, deleteDoc, query, where, updateDoc, onSnapshot } from '@angular/fire/firestore';
 
 interface Scientist {
   name?: string | null,
@@ -1111,12 +1127,16 @@ export class AppComponent {
   scientist$: Observable<Scientist[]>;
 
   selection: string = '';
+  selectionUpdate: string = '';
+  documentID: string = '';
+  docSnap: any;
+  docSnapName: string = '';
+  docSnapBorn: number | null = null;
+  docSnapAccomplishment: string = '';
 
   q: any;
   deleteID: string = '';
   deleteIDarray: string[] = [];
-
-  selectionUpdate: string = '';
 
   constructor(public firestore: Firestore) {
     const myCollection = collection(firestore, 'scientists');
@@ -1200,6 +1220,13 @@ export class AppComponent {
 
   async detachListener() {
     console.log("This function doesn't work.");
+  }
+
+  async getDocument() {
+    this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.documentID));
+    this.docSnapName = this.docSnap.data().name;
+    this.docSnapBorn = this.docSnap.data().born;
+    this.docSnapAccomplishment = this.docSnap.data().accomplishment;
   }
 }
 ```
