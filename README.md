@@ -1048,6 +1048,8 @@ export class AppModule { }
     </li>
 </ul>
 
+This data can be filtered with <code>query</code> and <code>where</code>, e.g., every computer scientist born after 1900.
+
 <h3>Observe</h3>
 <ul>
     <li *ngFor="let scientist of scientist$ | async">
