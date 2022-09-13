@@ -761,41 +761,77 @@ async onDelete() {
 
 This will delete all documents with the selected name. My database had several `Charles Babbage` documents. Now they're all gone. :-)
 
+## UPDATE in the view
 
+```html
+<h3>Update</h3>
+<form (ngSubmit)="onSelect()">
+    <select name="scientist" [(ngModel)]="selectionUpdate">
+        <option *ngFor="let scientist of scientist$ | async" [ngValue]="scientist.name">
+            {{ scientist.name }}
+        </option>
+    </select>
 
+    <input type="text" [(ngModel)]="bornUpdate" name="born" placeholder="Year born">
+    <input type="text" [(ngModel)]="accomplishmentUpdate" name="accomplishment" placeholder="Accomplishment">
 
+    <button type="submit" value="Submit">Select</button>
+</form>
 
+<form (ngSubmit)="onUpdate()">
+    <button type="submit" value="Update">Update</button>
+</form>
+```
 
+Note that there are two buttons. `Submit` pulls up the data after you select a computer scientist. Then you change the data and click `Update`.
+
+## UPDATE in the controller
+
+Import the `updateDoc` module.
 
 ```ts
-async onDelete() {
-    console.log(this.selection);
-    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
+import { Firestore, addDoc, doc, setDoc, getDocs, collectionData, collection, deleteDoc, query, where, updateDoc } from '@angular/fire/firestore';
+```
+
+Make some more variables:
+
+```ts
+nameUpdate: string = '';
+bornUpdate: number | null = null;
+accomplishmentUpdate: string | null = null;
+  
+update: any;
+selectionUpdate: string = '';
+```
+
+Add the handler functions:
+
+```ts
+async onSelect() {
+    console.log(this.selectionUpdate);
+    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selectionUpdate));
     this.querySnapshot = await getDocs(this.q);
     this.querySnapshot.forEach((docElement: any) => {
       console.log(docElement.id, ' => ', docElement.data());
-      deleteDoc(doc(this.firestore, 'scientists', docElement.id));
+      this.nameUpdate = docElement.data().name;
+      this.bornUpdate = docElement.data().born;
+      this.accomplishmentUpdate = docElement.data().accomplishment;
     });
+}
+  
+async onUpdate() {
+    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.nameUpdate));
+    this.querySnapshot = await getDocs(this.q);
+    this.querySnapshot.forEach((docElement: any) => {
+      console.log(docElement.id, ' => ', docElement.data());
+      this.nameUpdate = docElement.id;
+    });
+    await updateDoc(doc(this.firestore, 'scientists', this.nameUpdate), {
+      born: this.bornUpdate,
+    });
+    this.bornUpdate = null;
+    this.accomplishmentUpdate = null;
 }
 ```
 
-Note that the Firestore documentation uses `doc.id`:
-
-```ts
-querySnapshot.forEach((doc) => {
-  console.log(doc.id, " => ", doc.data());
-});
-```
-
-
-
-
-
-
-
-
-Now the user can select a computer scientist from the list and the document identifier logs in the console. Add 
-
-
-
-
+We have two handler functions, for the two buttons. `onSelect()` takes the name that the user selects and gets the data from the document. The user can then edit the data. The user clicks `onUpdate()` which finds the document by the `name` field and gets the document identifier. The document identifier is then used to in `updateDoc()`
