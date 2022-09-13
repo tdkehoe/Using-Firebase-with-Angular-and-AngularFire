@@ -1,6 +1,6 @@
 # Using Firebase with Angular and AngularFire
 
-This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses the Firebase Firestore cloud database, plus we'll make an OBSERVE that will display realtime updates.
+This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses the Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
 
 This project uses Angular 14, AngularFire 7.4, and Firebase Web version 9 (modular).
 
@@ -13,7 +13,7 @@ Howard Aiken, 1900: Built IBM's Harvard Mark I electromechanical computer
 John von Neumann, born 1903: Built first general-purpose computer with memory and instructions
 Alan Turing, born 1912: First theorized computers with memory and instructions, i.e., general-purpose computers
 Donald Knuth, born 1938: Father of algorithm analysis
-Robert Sanders, born 1938: Invented generalized dynamic instruction handling
+Lynn Ann Conway, born 1938: Invented generalized dynamic instruction handling
 Jeff Dean, born 1968: Google's smartest computer scientist
 ```
 
@@ -371,8 +371,8 @@ Add a variable `querySnapshot: any;` and a handler function:
 async getData() {
     console.log("Getting data!");
     this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
-    this.querySnapshot.forEach((doc: any) => {
-      console.log(`${doc.id} => ${doc.data().name}`);
+    this.querySnapshot.forEach((document: any) => {
+      console.log(`${document.id} => ${document.data().name}`);
     });
 }
 ```
@@ -431,8 +431,8 @@ export class AppComponent {
     console.log("Getting data!");
     this.scientists = [];
     this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
-    this.querySnapshot.forEach((doc: any) => {
-      console.log(`${doc.id} => ${doc.data().name}`);
+    this.querySnapshot.forEach((document: any) => {
+      console.log(`${document.id} => ${document.data().name}`);
     });
   }
 
@@ -447,9 +447,9 @@ Let's display this data in the HTML form. Make an array and push the scientists 
   async getData() {
     console.log("Getting data!");
     this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
-    this.querySnapshot.forEach((doc: any) => {
-      console.log(`${doc.id} => ${doc.data().name}`);
-      this.scientists.push(doc.data());
+    this.querySnapshot.forEach((document: any) => {
+      console.log(`${document.id} => ${document.data().name}`);
+      this.scientists.push(document.data());
     });
   }
 ```
@@ -550,8 +550,8 @@ export class AppComponent {
 
   async getData() {
     this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
-    this.querySnapshot.forEach((doc: any) => {
-      this.scientists.push(doc.data());
+    this.querySnapshot.forEach((document: any) => {
+      this.scientists.push(document.data());
     });
   }
 }
@@ -621,8 +621,8 @@ export class AppComponent {
 
   async getData() {
     this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
-    this.querySnapshot.forEach((doc: any) => {
-      this.scientists.push(doc.data());
+    this.querySnapshot.forEach((document: any) => {
+      this.scientists.push(document.data());
     });
   }
 }
@@ -754,9 +754,9 @@ async onDelete() {
     console.log(this.selection);
     this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
     this.querySnapshot = await getDocs(this.q);
-    this.querySnapshot.forEach((docElement: any) => {
-      console.log(docElement.id, ' => ', docElement.data());
-      deleteDoc(doc(this.firestore, 'scientists', docElement.id));
+    this.querySnapshot.forEach((document: any) => {
+      console.log(document.id, ' => ', document.data());
+      deleteDoc(doc(this.firestore, 'scientists', document.id));
     });
 }
 ```
@@ -811,20 +811,20 @@ async onSelect() {
     console.log(this.selectionUpdate);
     this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selectionUpdate));
     this.querySnapshot = await getDocs(this.q);
-    this.querySnapshot.forEach((docElement: any) => {
-      console.log(docElement.id, ' => ', docElement.data());
-      this.nameUpdate = docElement.data().name;
-      this.bornUpdate = docElement.data().born;
-      this.accomplishmentUpdate = docElement.data().accomplishment;
+    this.querySnapshot.forEach((document: any) => {
+      console.log(document.id, ' => ', document.data());
+      this.nameUpdate = document.data().name;
+      this.bornUpdate = document.data().born;
+      this.accomplishmentUpdate = document.data().accomplishment;
     });
 }
   
 async onUpdate() {
     this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.nameUpdate));
     this.querySnapshot = await getDocs(this.q);
-    this.querySnapshot.forEach((docElement: any) => {
-      console.log(docElement.id, ' => ', docElement.data());
-      this.nameUpdate = docElement.id;
+    this.querySnapshot.forEach((document: any) => {
+      console.log(document.id, ' => ', document.data());
+      this.nameUpdate = document.id;
     });
     await updateDoc(doc(this.firestore, 'scientists', this.nameUpdate), {
       born: this.bornUpdate,
@@ -838,14 +838,13 @@ We have two handler functions, for the two buttons. `onSelect()` takes the name 
 
 OK, I'm not proud of this `UPDATE` function. Because some documents have their document identifier matching the `name` field but other documents have a random string for their document identifier it's not possible to update the `name` field. In a real app the document identifiers would be standardized one way or the other. The two buttons are a poor user interface. In a real app the `Submit` button would be gone, with realtime data filling the view fields. `UPDATE` may seem like a simple CRUD function but it's actually the most complex because it has to let the user select a document, update one or more fields, without changing the document identifier.
 
-## Custom Objects and Data Converters
+## `any` Type
 
-One of the most frustrating parts of using Firebase with Typescript is handling the returning data without using the data type `any`. I count six variables typed as `any` in our controller:
+A frustrating part of using Firebase with Typescript is handling the returning collections and documents without using the data type `any`. I found these variables typed as `any` in our controller:
 
 * `querySnapshot` receives the collection `scientists` in the `getDocs()` data READ once function
 * `q` receives the collection that results from a query, i.e., a subset of the complete collection in the database
-* `doc`, `docElement`, `docElement`, and `docElement` are the elements (scientists) of these collections when we iterate through the collections using `forEach()`.
+* `document` is an document in an collection. `document.data` is type `Scientist` but `document` has additional properties.
 
-All of these are type `Scientist` or are arrays of `Scientist` elements. Let's get rid of these `any` types. 
-
+Firestore has a [data converter feature to make custom objects](https://firebase.google.com/docs/firestore/manage-data/add-data#custom_objects) but I don't see how this will get rid of `any` here.
 
