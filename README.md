@@ -2,7 +2,7 @@
 
 This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses Google's Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
 
-This project uses Angular 14, AngularFire 7.4, and Firesore Web version 9 (modular). I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is taught. 
+This project uses Angular 14, AngularFire 7.4, and Firestore Web version 9 (modular). I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is taught. 
 
 I expect that you'll read this tutorial with a second window open to the [Firebase documentation](https://firebase.google.com/docs/firestore) and the [AngularFire documentation](https://github.com/angular/angularfire). I'll try to let you know which page of the Firebase documentation to open for each section of this tutorial. This stuff changes, especially AngularFire. Make a pull request if something in this tutorial is out of date.
 
@@ -354,11 +354,11 @@ You should see different results. `add()` created a new record for Howard Aiken'
 * Third parameter in `setDoc(doc())` for document identifier.
 * Document identifier can't be null. Note that we initialized `nameSet` with an empty string `''`, not `null`.
  
-## READ in the view
+## READ document in the view
  
 Open the [Get data once](https://firebase.google.com/docs/firestore/query-data/get-data) section of the Firestore documentation.
  
-Let's display the data in the HTML view. In `app.component.html` add a button that gets the data from Firestore:
+In `app.component.html` add a button that allows you to select a computer scientist by name and then click a button to display their birthyear and accomplishment. Don't try to understand how the list of computer scientists gets into the `<select><option>`, we'll get to that in the `OBSERVE` section.
 
 ```html
 <h2>Greatest Computer Scientists</h2>
@@ -371,13 +371,52 @@ Let's display the data in the HTML view. In `app.component.html` add a button th
     <button type="submit" value="Submit">Submit</button>
 </form>
 
-<h3>Read</h3>
-<form (ngSubmit)="getData()">
-    <button type="submit" value="getData">Get Data</button>
+<h3>Read (one document, once)</h3>
+
+<form (ngSubmit)="getDocument()">
+    <select name="scientist" [(ngModel)]="selectionGetDocument">
+        <option *ngFor="let scientist of scientist$ | async" [ngValue]="scientist.name">
+            {{ scientist.name }}
+        </option>
+    </select>
+
+    <button type="submit" value="Submit">Get Document</button>
 </form>
+
+{{ docSnapName }}, born {{docSnapBorn}}: {{docSnapAccomplishment}}
 ```
+
+## READ document in the controller
+
+Import the `doc` and `getDoc` modules.
+
+```ts
+import { doc, getDoc } from '@angular/fire/firestore';
+```
+
+Make some variables.
+
+```ts
+docSnap: any;
+docSnapName: string = '';
+docSnapBorn: number | null = null;
+docSnapAccomplishment: string = '';
+```
+
+Make the handler function.
+
+```ts
+async getDocument() {
+    this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.selectionGetDocument));
+    this.docSnapName = this.docSnap.data().name;
+    this.docSnapBorn = this.docSnap.data().born;
+    this.docSnapAccomplishment = this.docSnap.data().accomplishment;
+}
+```
+
+Couldn't be simpler! Well, it could. We could use a data converter instead of the last three lines.
  
-## READ in the controller
+## READ collection in the controller
 
 Add a variable `querySnapshot: any;` and a handler function:
 
@@ -392,6 +431,10 @@ async getData() {
 ```
 
 This should display the names of your favorite computer scientists in your console (and the ID strings of each document).
+
+Note that `getDocs()` doesn't get a document. It gets a collection. Why isn't it called `getCollection()`?
+
+
 
 Here's the complete code:
 
