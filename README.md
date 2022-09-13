@@ -2,7 +2,11 @@
 
 This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses Google's Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
 
-This project uses Angular 14, AngularFire 7.4, and Firebase Web version 9 (modular). No CSS or styling is taught.
+This project uses Angular 14, AngularFire 7.4, and Firesore Web version 9 (modular). I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is taught. 
+
+I expect that you'll read this tutorial with a second window open to the [Firebase documentation](https://firebase.google.com/docs/firestore) and the [AngularFire documentation](https://github.com/angular/angularfire). I'll try to let you know which page of the Firebase documentation to open for each section of this tutorial. This stuff changes, especially AngularFire. Make a pull request if something in this tutorial is out of date.
+
+Before we get started you may want to read the [Introduction](https://firebase.google.com/docs/firestore) to the Firestore documentation.
 
 Here is the data we will use:
 
@@ -53,6 +57,8 @@ Create your Firestore database.
 
 ## Add Firebase config to `environments` variable
 
+Open the Firestore [Get started](https://firebase.google.com/docs/firestore/quickstart) section.
+
 In your [Firebase Console](https://console.firebase.google.com), under `Get started by adding Firebase to your app` select the web app `</>` icon. Register your app, again calling it `Greatest Computer Scientists`. You won't need `Firebase Hosting`, we'll just run the app locally.
 
 Under `Add Firebase SDK` select `Use npm`.
@@ -98,6 +104,8 @@ const app = initializeApp(firebaseConfig);
 We'll use AngularFire instead of these items. Click `Continue to console`.
 
 ## Setup `@NgModule` for the `AngularFireModule`
+
+Open the [AngularFire documentation](https://github.com/angular/angularfire) for this section.
 
 Open `/src/app/app.module.ts`, import the `environment` module and the `FormsModule` module. Then import a bunch of AngularFire modules. Lastly, import the FormsModule and two AngularFire functions to initialize Firebase and get Firestore.
 
@@ -186,6 +194,8 @@ Clicking the button executes `ngSubmit` and the function `onCreate()`.
 
 ## Add data to Firestore with `add()`
 
+Open the [Add Data](https://firebase.google.com/docs/firestore/quickstart#add_data) section of the Firestore documentation.
+
 Now we'll add a handler function to write the data to database.
 
 ```ts
@@ -258,6 +268,8 @@ Notice that Charles Babbage is still in your HTML form fields. Lets's clear that
 ```
 
 ### `set()` vs.`add()
+
+Open the [Add data](https://firebase.google.com/docs/firestore/manage-data/add-data) section of the Firestore documentation.
 
 Note that the document identifier (ID) is a string of letters and numbers. `add()` automatically generates an ID string. If you want to make the document identifier yourself you use `set()`.
 
@@ -343,6 +355,8 @@ You should see different results. `add()` created a new record for Howard Aiken'
 * Document identifier can't be null. Note that we initialized `nameSet` with an empty string `''`, not `null`.
  
 ## READ in the view
+ 
+Open the [Get data once](https://firebase.google.com/docs/firestore/query-data/get-data) section of the Firestore documentation.
  
 Let's display the data in the HTML view. In `app.component.html` add a button that gets the data from Firestore:
 
@@ -573,6 +587,8 @@ export class AppComponent {
 
 ## OBSERVE in the controller
 
+Open the [Listen for realtime updates](https://firebase.google.com/docs/firestore/query-data/listen) section of the Firestore documentation.
+
 Let's get rid of that `Get Data` button. This is 2022, we're not using SQL!
 
 Import `Observable` from `rxjs`. Make an instantiation of the `Observable` class, call it `scientist$`, and set the type as an array of `Scientist` elements: 
@@ -728,6 +744,8 @@ Works great...on the records that we entered with `set()`, where the document id
 
 ### DELETE by auto-generated document identifier
 
+Open [Perform simple and compound queries in Cloud Firestore](https://firebase.google.com/docs/firestore/query-data/queries) in the Firestore documentation. 
+
 For documents with auto-generated document identifiers we'll have to do a query to find the document identifier.
 
 Import the `collection`, `query`, and `where` modules.
@@ -821,6 +839,8 @@ Note that there are two buttons. `Submit` pulls up the data after you select a c
 
 ## UPDATE in the controller
 
+Open [Update a document](https://firebase.google.com/docs/firestore/manage-data/add-data#update-data) in the Firestore documentation.
+
 Import the `updateDoc` module.
 
 ```ts
@@ -870,11 +890,19 @@ We have two handler functions, for the two buttons. `onSelect()` takes the name 
 
 OK, I'm not proud of this `UPDATE` function. Because some documents have their document identifier matching the `name` field but other documents have a random string for their document identifier it's not possible to update the `name` field. In a real app the document identifiers would be standardized one way or the other. The two buttons are a poor user interface. In a real app the `Submit` button would be gone, with realtime data filling the view fields. `UPDATE` may seem like a simple CRUD function but it's actually the most complex because it has to let the user select a document, update one or more fields, without changing the document identifier.
 
-## `any` Type for returned collections and documents
+## To Do: Stuff I don't understand
 
-The TypeScript gods hate it when we use `any` but collections and documents returned from Firestore are type `any`, as far as I know. You sent data to Firestore as a `Scientist` custom type but it comes back as a document in which the data you sent is now `document.data`, i.e., Firestore puts a container around your data. 
+There's a few things that I either don't understand of Firebase can't do.
+
+### `any` Type for returned collections and documents
+
+The TypeScript gods hate it when we use `any` but collections and documents returned from Firestore are type `any`, as far as I know. You sent data to Firestore as a `Scientist` custom type but it comes back as a document in which the data you sent is now `document.data`, i.e., Firestore puts a container around your data. Maybe Firestore could have a module with two interfaces or types, `Collection` and `Document`, that we could use instead of `any`?
 
 Firestore has a [data converter feature to make custom objects](https://firebase.google.com/docs/firestore/manage-data/add-data#custom_objects) but I don't see how this will get rid of `any` here.
+
+### `unsubscribe()` from listener
+
+I couldn't get this code to work.
 
 ## Complete finished code
 
