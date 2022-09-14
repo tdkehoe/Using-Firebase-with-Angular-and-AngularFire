@@ -267,7 +267,7 @@ Notice that Charles Babbage is still in your HTML form fields. Lets's clear that
   }
 ```
 
-### `set()` vs.`add()
+### `set()` vs. `add()`
 
 Open the [Add data](https://firebase.google.com/docs/firestore/manage-data/add-data) section of the Firestore documentation.
 
