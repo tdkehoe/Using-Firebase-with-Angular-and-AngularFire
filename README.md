@@ -2,7 +2,11 @@
 
 This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses Google's Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
 
-This project uses Angular 14, AngularFire 7.4, and Firestore Web version 9 (modular). I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is taught. 
+This project uses Angular 14, AngularFire 7.4, and Firestore Web version 9 (modular). 
+
+Firestore Web version 9 is a big advance. Load time is reduced by as much as 80%. I like that the documentation is written with `async await` instead of promises.
+
+I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is taught. 
 
 I expect that you'll read this tutorial with a second window open to the [Firebase documentation](https://firebase.google.com/docs/firestore) and the [AngularFire documentation](https://github.com/angular/angularfire). I'll try to let you know which page of the Firebase documentation to open for each section of this tutorial. This stuff changes, especially AngularFire. Make a pull request if something in this tutorial is out of date.
 
@@ -15,6 +19,7 @@ Charles Babbage, born 1791: Built first computer
 Ada Lovelace, born 1815: Wrote first software
 Howard Aiken, 1900: Built IBM's Harvard Mark I electromechanical computer
 John von Neumann, born 1903: Built first general-purpose computer with memory and instructions
+Grace Hopper, born 1906: Devised the first machine-independent programming language.
 Alan Turing, born 1912: First theorized computers with memory and instructions, i.e., general-purpose computers
 Donald Knuth, born 1938: Father of algorithm analysis
 Lynn Ann Conway, born 1938: Invented generalized dynamic instruction handling
@@ -199,28 +204,7 @@ Open the [Add Data](https://firebase.google.com/docs/firestore/quickstart#add_da
 Now we'll add a handler function to write the data to database.
 
 ```ts
-import { Component } from '@angular/core';
-import { Firestore } from '@angular/fire/firestore';
-
-// Firebase Lite
-import { collection, addDoc } from '@firebase/firestore/lite';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-  title = 'GreatestComputerScientistsLite';
-
-  name: string | null = null;
-  born: number | null = null;
-  accomplishment: string | null = null;
-
-  constructor(public firestore: Firestore) {
-  }
-
-  async onCreate() {
+async onCreate() {
     try {
       const docRef = await addDoc(collection(this.firestore, 'scientists'), {
         name: this.name,
@@ -231,7 +215,6 @@ export class AppComponent {
     } catch (error) {
       console.error(error);
     }
-  }
 }
 ```
 
@@ -415,8 +398,31 @@ async getDocument() {
 }
 ```
 
-Couldn't be simpler! Well, it could. We could use a data converter instead of the last three lines.
- 
+Couldn't be simpler! Well, it could. Let's make a variable to hold the data:
+
+```ts
+singleDoc: Scientist = {
+    name: null,
+    born: null,
+    accomplishment: null
+}
+```
+
+Simplfy the handler function:
+
+```ts
+async getDocument() {
+    this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.documentID));
+    this.singleDoc = this.docSnap.data();
+}
+```
+
+And display the data:
+
+```html
+{{ singleDoc.name }}, born {{ singleDoc.born }}: {{ singleDoc.accomplishment }}
+```
+
 ## READ collection in the controller
 
 Add a variable `querySnapshot: any;` and a handler function:
@@ -1033,7 +1039,7 @@ export class AppModule { }
     <button type="submit" value="Submit">Get Document</button>
 </form>
 
-{{ docSnapName }}, born {{docSnapBorn}}: {{docSnapAccomplishment}}
+{{ singleDoc.name }}, born {{ singleDoc.born }}: {{ singleDoc.accomplishment }}
 
 <h3>Read (collection of documents, once)</h3>
 
@@ -1131,9 +1137,12 @@ export class AppComponent {
   selectionUpdate: string = '';
   documentID: string = '';
   docSnap: any;
-  docSnapName: string = '';
-  docSnapBorn: number | null = null;
-  docSnapAccomplishment: string = '';
+
+  singleDoc: Scientist = {
+    name: null,
+    born: null,
+    accomplishment: null
+  }
 
   q: any;
   deleteID: string = '';
@@ -1225,9 +1234,7 @@ export class AppComponent {
 
   async getDocument() {
     this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.documentID));
-    this.docSnapName = this.docSnap.data().name;
-    this.docSnapBorn = this.docSnap.data().born;
-    this.docSnapAccomplishment = this.docSnap.data().accomplishment;
+    this.singleDoc = this.docSnap.data();
   }
 }
 ```
