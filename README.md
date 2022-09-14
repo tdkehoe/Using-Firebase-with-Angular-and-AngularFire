@@ -439,68 +439,6 @@ async getData() {
 
 This should display the names of your favorite computer scientists in your console (and the ID strings of each document).
 
-Note that `getDocs()` doesn't get a document. It gets a collection. Why isn't it called `getCollection()`?
-
-Here's the complete code:
-
-```ts
-import { Component } from '@angular/core';
-import { Firestore, collectionData } from '@angular/fire/firestore';
-
-// Firebase Lite
-import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from '@firebase/firestore/lite';
-
-interface Scientist {
-  name?: string,
-  born?: number,
-  accomplishment?: string
-};
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-  title = 'GreatestComputerScientistsLite';
-
-  name: string | null = null;
-  born: number | null = null;
-  accomplishment: string | null = null;
-  scientists: any;
-  querySnapshot: any;
-
-  constructor(public firestore: Firestore) {
-  }
-
-  async onCreate() {
-    try {
-      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
-        name: this.name,
-        born: this.born,
-        accomplishment: this.accomplishment
-      });
-      console.log("Document written with ID: ", docRef.id);
-      this.name = null;
-      this.born = null;
-      this.accomplishment = null;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async getData() {
-    console.log("Getting data!");
-    this.scientists = [];
-    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
-    this.querySnapshot.forEach((document: any) => {
-      console.log(`${document.id} => ${document.data().name}`);
-    });
-  }
-
-}
-```
-
 ### Displaying the data
 
 Let's display this data in the HTML form. Make an array and push the scientists into the array:
@@ -574,64 +512,6 @@ By default the data is ordered by the document identifier. You can [order your d
 ### Using the Firebase data converter to make custom objects
 
 We won't do it here but if you need to do stuff with your downloaded documents other than to display them in the HTML view, you may want to convert your documents into the `Scientist` type we just made. Firestore has a [data converter](https://firebase.google.com/docs/firestore/query-data/get-data#custom_objects) to make custom objects.
-
-### Complete code so far
-
-Here's the complete code so far:
-
-```ts
-import { Component } from '@angular/core';
-
-// Firebase
-import { Firestore, addDoc, getDocs, collectionData, collection } from '@angular/fire/firestore';
-
-interface Scientist {
-  name?: string,
-  born?: number,
-  accomplishment?: string
-};
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-  title = 'GreatestComputerScientistsLite';
-
-  name: string | null = null;
-  born: number | null = null;
-  accomplishment: string | null = null;
-
-  querySnapshot: any;
-  scientists: Scientist[] = [];
-
-  constructor(public firestore: Firestore) {}
-
-  async onCreate() {
-    try {
-      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
-        name: this.name,
-        born: this.born,
-        accomplishment: this.accomplishment
-      });
-      console.log("Document written with ID: ", docRef.id);
-      this.name = null;
-      this.born = null;
-      this.accomplishment = null;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async getData() {
-    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
-    this.querySnapshot.forEach((document: any) => {
-      this.scientists.push(document.data());
-    });
-  }
-}
-```
 
 ## OBSERVE in the controller
 
@@ -832,17 +712,23 @@ Do you see the problem? Look at this line:
 deleteDoc(doc(this.firestore, 'scientists', doc.id));
 ```
 
-`doc` is both a Firestore module and the elements in the array being iterated. I've sent feedback to the Firebase team suggesting renaming the module `document` (to go with `collection`).
+`doc` is both a Firestore module and the elements in the array being iterated. We can use an alias for the module `doc`:
 
-We can't rename the Firestore module so we'll have change the name of the elements in the array.
+```ts
+import { doc as whatsUpDoc } from '@angular/fire/firestore';
+```
+
+but I can't think of a better name for the module than `doc`. We can't use `document` because that's a [JavaScript keyword](https://developer.mozilla.org/en-US/docs/Web/API/Document). I suspect that the Firebase team had a discussion about this.
+
+We'll have change the name of the elements in the array from `doc` to `docElement`.
 
 ```ts
 async onDelete() {
     console.log(this.selection);
     this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
     this.querySnapshot = await getDocs(this.q);
-    this.querySnapshot.forEach((document: any) => {
-      console.log(document.id, ' => ', document.data());
+    this.querySnapshot.forEach((docElement: any) => {
+      console.log(docElement.id, ' => ', docElement.data());
       deleteDoc(doc(this.firestore, 'scientists', document.id));
     });
 }
