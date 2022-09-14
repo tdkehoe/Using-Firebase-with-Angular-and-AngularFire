@@ -366,8 +366,10 @@ In `app.component.html` add a button that allows you to select a computer scient
     <button type="submit" value="Submit">Get Document</button>
 </form>
 
-{{ docSnapName }}, born {{docSnapBorn}}: {{docSnapAccomplishment}}
+<div *ngIf="singleDoc.name">{{ singleDoc.name }}, born {{ singleDoc.born }}: {{ singleDoc.accomplishment }}</div>
 ```
+
+We're using `*ngIf` to hide the result before the user selects a scientist.
 
 ## READ document in the controller
 
@@ -425,7 +427,13 @@ And display the data:
 
 ## READ collection in the controller
 
-Add a variable `querySnapshot: any;` and a handler function:
+Add a variable 
+
+```ts
+`querySnapshot: any;` 
+```
+
+and a handler function:
 
 ```ts
 async getData() {
@@ -437,7 +445,9 @@ async getData() {
 }
 ```
 
-This should display the names of your favorite computer scientists in your console (and the ID strings of each document).
+The first line clears any old data in the view. This should display the names of your favorite computer scientists in your console.
+
+Let's add `query where` to filter the results
 
 ### Displaying the data
 
@@ -445,7 +455,6 @@ Let's display this data in the HTML form. Make an array and push the scientists 
 
 ```ts
   async getData() {
-    console.log("Getting data!");
     this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
     this.querySnapshot.forEach((document: any) => {
       console.log(`${document.id} => ${document.data().name}`);
@@ -501,9 +510,36 @@ this.scientists = [];
 
 `querySnapshot` has to remain type `any`. It seems to be type `QuerySnapshot<DocumentData>`. I have no idea how to call that as a type.
 
-### Query to get multiple documents
+Also, let's clear any old data from the view:
 
-We'll use `query` and `where` in the DELETE and UPDATE sections to get multiple documents. 
+```ts
+    this.scientists = []; // clear view
+```
+
+### Filter with `query` and `where`
+
+Make a variable:
+
+```ts
+whenBorn: string = '1700';
+```
+
+This should be a number but it only works as a string. Sometimes TypeScript is baffling.
+
+And make a query in the handler function:
+
+```ts
+async getData() {
+    this.scientists = []; // clear view
+    this.q = query(collection(this.firestore, 'scientists'), where('born', '>=', this.whenBorn));
+    this.querySnapshot = await getDocs(this.q);
+    this.querySnapshot.forEach((docElement: any) => {
+      this.scientists.push(docElement.data());
+    });
+}
+```
+
+The user can now filter results to show only computer scientists born after 1700, 1800, or 1900.
 
 ### Order and limit data
 
@@ -511,7 +547,7 @@ By default the data is ordered by the document identifier. You can [order your d
 
 ### Using the Firebase data converter to make custom objects
 
-We won't do it here but if you need to do stuff with your downloaded documents other than to display them in the HTML view, you may want to convert your documents into the `Scientist` type we just made. Firestore has a [data converter](https://firebase.google.com/docs/firestore/query-data/get-data#custom_objects) to make custom objects.
+I can't get the Firestore [data converter](https://firebase.google.com/docs/firestore/query-data/get-data#custom_objects) to work. It should convert downloaded documents into custom objects, e.g., `Scientist`, or convert objects to be uploaded to Firestore into a specific collection. 
 
 ## OBSERVE in the controller
 
