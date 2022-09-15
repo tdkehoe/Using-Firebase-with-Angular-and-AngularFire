@@ -549,7 +549,7 @@ By default the data is ordered by the document identifier. You can [order your d
 
 I can't get the Firestore [data converter](https://firebase.google.com/docs/firestore/query-data/get-data#custom_objects) to work. It should convert downloaded documents into custom objects, e.g., `Scientist`, or convert objects to be uploaded to Firestore into a specific collection. 
 
-## OBSERVE in the controller
+## OBSERVE a collection listener in the controller
 
 Open the [Listen for realtime updates](https://firebase.google.com/docs/firestore/query-data/listen) section of the Firestore documentation.
 
@@ -571,7 +571,7 @@ The observer is one line in the `constructor`:
 
 That's it. Now `scientist$` will always mirror the database. We have the observer in the `constructor` so that it starts when the page loads (`ngOnInit` would do more or less the same thing). An observer could instead go in a function to start after an event.
 
-### OBSERVE in the view
+### OBSERVE a collection listener in the view
 
 In the HTML view, repeat the `*ngFor` data display, with three changes. First, no button. Second, change `scientists` to `scientist$`. Third, add the pipe `| async`.
 
@@ -586,9 +586,61 @@ In the HTML view, repeat the `*ngFor` data display, with three changes. First, n
 
 You should now see the data without clicking the button, and then the same data when you click the button. Add another record and watch it change in real time. Try to make MongoDB do that!
 
+### OBSERVE a document listener in the controller
+
+We can also observe a single document. In the controller, make some variables:
+
+```ts
+charle$: Scientist  = {
+    name: null,
+    born: null,
+    accomplishment: null
+  };
+unsubCharle$: any;
+```
+
+Then make the listener in the `constructor`:
+
+```ts
+constructor(public firestore: Firestore) {
+    this.scientist$ = collectionData(collection(firestore, 'scientists')); // collection listenr
+    this.unsubCharle$ = onSnapshot(doc(firestore, 'scientists', 'Charles Babbage'), (snapshot: any) => { // document listener
+        this.charle$.name = snapshot.data().name;
+        this.charle$.born = snapshot.data().born;
+        this.charle$.accomplishment = snapshot.data().accomplishment;
+    });
+}
+```
+
+This makes two observers, the collection listener and the document listener.
+
+### OBSERVE a document listener in the view
+
+```html
+<h3>Observe (single document, 'Charles Babbage')</h3>
+<div *ngIf="charle$.name">{{ charle$.name }}, born {{ charle$.born }}: {{ charle$.accomplishment}}</div>
+```
+
 ### Detach a listener
 
-When you no longer need to observe a collection, [detach the listener](https://firebase.google.com/docs/firestore/query-data/listen#detach_a_listener) to reduce your bandwidth. I can't figure out how to do this.
+When you no longer need to observe a collection, [detach the listener](https://firebase.google.com/docs/firestore/query-data/listen#detach_a_listener) to reduce your bandwidth.
+
+Detaching the document listener is easy:
+
+```html
+<form (ngSubmit)="detachListener()">
+    <button type="submit" value="detachListener">Detach Listener</button>
+</form>
+```
+
+```ts
+async detachListener() {
+    console.log("Detaching listener.");
+    this.unsubCharle$();
+}
+```
+
+I can't figure out how to detach the collection listener.
 
 ## DELETE in the view
 
