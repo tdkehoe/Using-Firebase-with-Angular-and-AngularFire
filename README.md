@@ -560,95 +560,22 @@ Import `Observable` from `rxjs`. Make an instantiation of the `Observable` class
 ```ts
 scientist$: Observable<Scientist[]>;
 ```
-Note that there's no handler function. The user doesn't click a button. The data just displays.
 
-Here's the complete code:
+The observer is one line in the `constructor`:
 
 ```ts
-import { Component } from '@angular/core';
-import { Observable } from 'rxjs';
-
-// Firebase
-import { Firestore, addDoc, getDocs, collectionData, collection } from '@angular/fire/firestore';
-
-interface Scientist {
-  name?: string,
-  born?: number,
-  accomplishment?: string
-};
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-  title = 'GreatestComputerScientistsLite';
-
-  name: string | null = null;
-  born: number | null = null;
-  accomplishment: string | null = null;
-
-  querySnapshot: any;
-  scientists: Scientist[] = [];
-  scientist$: Observable<Scientist[]>;
-
-  constructor(public firestore: Firestore) {
-    const myCollection = collection(firestore, 'scientists');
-    this.scientist$ = collectionData(myCollection);
+ constructor(public firestore: Firestore) {
+    this.scientist$ = collectionData(collection(firestore, 'scientists'));
   }
-
-  async onCreate() {
-    try {
-      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
-        name: this.name,
-        born: this.born,
-        accomplishment: this.accomplishment
-      });
-      console.log("Document written with ID: ", docRef.id);
-      this.name = null;
-      this.born = null;
-      this.accomplishment = null;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async getData() {
-    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
-    this.querySnapshot.forEach((document: any) => {
-      this.scientists.push(document.data());
-    });
-  }
-}
 ```
+
+That's it. Now `scientist$` will always mirror the database. We have the observer in the `constructor` so that it starts when the page loads (`ngOnInit` would do more or less the same thing). An observer could instead go in a function to start after an event.
 
 ### OBSERVE in the view
 
-In the HTML view, repeat the `*ngFor` data display, with three changes. First, no button. Second, change `scientists` to `scientist$`. Third, add `| async`.
+In the HTML view, repeat the `*ngFor` data display, with three changes. First, no button. Second, change `scientists` to `scientist$`. Third, add the pipe `| async`.
 
 ```html
-<h2>Greatest Computer Scientists</h2>
-
-<h3>Create</h3>
-<form (ngSubmit)="onCreate()">
-    <input type="text" [(ngModel)]="name" name="name" placeholder="Name" required>
-    <input type="text" [(ngModel)]="born" name="born" placeholder="Year born">
-    <input type="text" [(ngModel)]="accomplishment" name="accomplishment" placeholder="Accomplishment">
-    <button type="submit" value="Submit">Submit</button>
-</form>
-
-<h3>Read</h3>
-<form (ngSubmit)="getData()">
-    <button type="submit" value="getData">Get Data</button>
-</form>
-
-<ul>
-    <li *ngFor="let scientist of scientists">
-        {{scientist.name}}, born {{scientist.born}}: {{scientist.accomplishment}}
-    </li>
-</ul>
-
 <h3>Observe</h3>
 <ul>
     <li *ngFor="let scientist of scientist$ | async">
