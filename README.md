@@ -8,11 +8,15 @@ Firestore Web version 9 is a big advance. Load time is reduced by as much as 80%
 
 I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is taught. 
 
+### Collections and documents
+
+I assume that you know the [basics](https://firebase.google.com/docs/firestore) of Firebase's Firestore cloud database. In particular, this tutorial talks about `collections` and `documents`. This is essential. A `collection` is pretty much an array and a `document` is pretty much an object, just like in JavaScript. Firestore is structured with collections of documents. A document can contain a collection (a.k.a. a sub-collection), which contains further documents. This `collection`-`document`-`collection`-`document` pattern is maintained. 
+
+You'll see that some of the CRUD operations come in pairs: one for a collection and one for a document. You can READ a collection with `getDoc()` or READ a collection with `getDocs()`. You can OBSERVE a collection or OBSERVE a document. The other three CRUD operations (CREATE, UPDATE, DELETE) are only for documents. You, as admin, can CREATE and DELETE collections from the Firebase console but users can't do these operations from a web app.
+
 I expect that you'll read this tutorial with a second window open to the [Firebase documentation](https://firebase.google.com/docs/firestore) and the [AngularFire documentation](https://github.com/angular/angularfire). I'll try to let you know which page of the Firebase documentation to open for each section of this tutorial. This stuff changes, especially AngularFire. Make a pull request if something in this tutorial is out of date.
 
-Before we get started you may want to read the [Introduction](https://firebase.google.com/docs/firestore) to the Firestore documentation.
-
-Here is the data we will use:
+Here is the data (documents) we will use:
 
 ```
 Charles Babbage, born 1791: Built first computer
@@ -336,6 +340,10 @@ You should see different results. `add()` created a new record for Howard Aiken'
 * Import `doc` and `setDoc` modules.
 * Third parameter in `setDoc(doc())` for document identifier.
 * Document identifier can't be null. Note that we initialized `nameSet` with an empty string `''`, not `null`.
+ 
+## CREATE collections
+
+You, as admin, can create collections in the Firebase console or the CLI. Your users can't create collections from a web app.
  
 ## READ document in the view
  
@@ -761,7 +769,7 @@ To delete fields in documents use [deleteField()](https://firebase.google.com/do
 
 If a field in a document is a collection, i.e., a subcollection, the documents in those subcollections won't be deleted with the parent document. You'll have to search for and delete each document in a subcollection, or delete the subcollection from the Firebase Console.
 
-Delete collections from the Firebase Console. Don't try to delete collections from a web client.
+You, as admin, can delete collections in the Firebase console or the CLI. Your users can't delete collections from a web app.
 
 ## UPDATE in the view
 
@@ -841,17 +849,23 @@ We have two handler functions, making UPDATE more complex than the other CRUD fe
 
 When we have the document identifier we then run `updateDoc()` to update the database.
 
+## UPDATE collections
+
+Can't do that from anywhere.
+
 ## To Do: Stuff I don't understand
 
 There's a few things that I either don't understand of Firebase can't do.
 
-### `any` Type for returned collections and documents
+### `any` ype for returned collections and documents, $events, snapshot
 
-The TypeScript gods hate it when we use `any` but collections and documents returned from Firestore are type `any`, as far as I know. You sent data to Firestore as a `Scientist` custom type but it comes back as a document in which the data you sent is now `document.data`, i.e., Firestore puts a container around your data. Maybe Firestore could have a module with two interfaces or types, `Collection` and `Document`, that we could use instead of `any`?
+The TypeScript gods hate it when we use `any` but collections and documents returned from Firestore are type `any`, as far as I know. You send data to Firestore as a `Scientist` custom type but it comes back as a document in which the data is now `document.data`, i.e., Firestore puts a container around your data. The other stuff Firestore returns, including `$event` and `snapshot`, also have to be typed `any`. (I tried typing `$event` as `Event` but this threw an error.)
+
+Maybe Firestore could provide a module with interfaces or types, `Collection` and `Document`, that we could use instead of `any`?
 
 Firestore has a [data converter feature to make custom objects](https://firebase.google.com/docs/firestore/manage-data/add-data#custom_objects) but I don't see how this will get rid of `any` here.
 
-### `unsubscribe()` from listener
+### `unsubscribe()` from collections listener
 
 I couldn't get this code to work.
 
@@ -913,7 +927,7 @@ export class AppModule { }
 ```ts
 <h2>Greatest Computer Scientists</h2>
 
-<h3>Create (add)</h3>
+<h3>Create document (add)</h3>
 <form (ngSubmit)="onCreate()">
     <input type="text" [(ngModel)]="name" name="name" placeholder="Name" required>
     <input type="text" [(ngModel)]="born" name="born" placeholder="Year born">
@@ -921,7 +935,7 @@ export class AppModule { }
     <button type="submit" value="Submit">Submit</button>
 </form>
 
-<h3>Create (set)</h3>
+<h3>Create document (set)</h3>
 <form (ngSubmit)="onSet()">
     <input type="text" [(ngModel)]="nameSet" name="name" placeholder="Name" required>
     <input type="text" [(ngModel)]="bornSet" name="born" placeholder="Year born">
@@ -929,7 +943,7 @@ export class AppModule { }
     <button type="submit" value="Submit">Submit</button>
 </form>
 
-<h3>Read (one document, once)</h3>
+<h3 ng>Read (document, once)</h3>
 
 <form (ngSubmit)="getDocument()">
     <select name="scientist" [(ngModel)]="documentID">
@@ -941,9 +955,9 @@ export class AppModule { }
     <button type="submit" value="Submit">Get Document</button>
 </form>
 
-{{ singleDoc.name }}, born {{ singleDoc.born }}: {{ singleDoc.accomplishment }}
+<div *ngIf="singleDoc.name">{{ singleDoc.name }}, born {{ singleDoc.born }}: {{ singleDoc.accomplishment }}</div>
 
-<h3>Read (collection of documents, once)</h3>
+<h3>Read (collection, once)</h3>
 
 <form (ngSubmit)="getData()">
     <button type="submit" value="getData">Get Collection</button>
@@ -955,9 +969,14 @@ export class AppModule { }
     </li>
 </ul>
 
-This data can be filtered with <code>query</code> and <code>where</code>, e.g., every computer scientist born after 1900.
+Show only computer scientists born after:
+<select name="whenBorn" [(ngModel)]="whenBorn">
+    <option>1700</option>
+    <option>1800</option>
+    <option>1900</option>
+</select> (filter documents with <code>query</code> and <code>where</code>)
 
-<h3>Observe</h3>
+<h3>Observe (collection)</h3>
 <ul>
     <li *ngFor="let scientist of scientist$ | async">
         {{scientist.name}}, born {{scientist.born}}: {{scientist.accomplishment}}
@@ -968,9 +987,13 @@ This data can be filtered with <code>query</code> and <code>where</code>, e.g., 
     <button type="submit" value="detachListener">Detach Listener</button>
 </form>
 
-<h3>Update</h3>
-<form (ngSubmit)="onSelect()">
-    <select name="scientist" [(ngModel)]="selectionUpdate">
+<h3>Observe (document, 'Charles Babbage')</h3>
+<div *ngIf="charle$.name">{{ charle$.name }}, born {{ charle$.born }}: {{ charle$.accomplishment}}</div>
+
+<h3>Update document</h3>
+<form (ngSubmit)="onUpdate()">
+    <select (change)="onSelect($event)">
+        <option>Select scientist</option>
         <option *ngFor="let scientist of scientist$ | async" [ngValue]="scientist.name">
             {{ scientist.name }}
         </option>
@@ -978,17 +1001,12 @@ This data can be filtered with <code>query</code> and <code>where</code>, e.g., 
 
     <input type="text" [(ngModel)]="bornUpdate" name="born" placeholder="Year born">
     <input type="text" [(ngModel)]="accomplishmentUpdate" name="accomplishment" placeholder="Accomplishment">
-
-    <button type="submit" value="Submit">Select</button>
-</form>
-
-<form (ngSubmit)="onUpdate()">
     <button type="submit" value="Update">Update</button>
 </form>
 
-<h3>Delete</h3>
+<h3>Delete document</h3>
 <form (ngSubmit)="onDelete()">
-    <select name="scientist" [(ngModel)]="selection">
+    <select name="deleteScientist" [(ngModel)]="selection">
         <option *ngFor="let scientist of scientist$ | async" [ngValue]="scientist.name">
             {{scientist.name}}
         </option>
@@ -1001,11 +1019,11 @@ This data can be filtered with <code>query</code> and <code>where</code>, e.g., 
 ### `app.component.ts`
 
 ```ts
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 
 // Firebase
-import { Firestore, addDoc, doc, setDoc, getDoc, getDocs, collectionData, collection, deleteDoc, query, where, updateDoc, onSnapshot } from '@angular/fire/firestore';
+import { Firestore, doc, addDoc, setDoc, getDoc, getDocs, collectionData, collection, deleteDoc, query, where, updateDoc, onSnapshot } from '@angular/fire/firestore';
 
 interface Scientist {
   name?: string | null,
@@ -1021,40 +1039,73 @@ interface Scientist {
 export class AppComponent {
   title = 'GreatestComputerScientistsLite';
 
+  //CREATE add()
   name: string | null = null;
   born: number | null = null;
   accomplishment: string | null = null;
+
+  // CREATE set()
   nameSet: string = '';
   bornSet: number | null = null;
   accomplishmentSet: string | null = null;
+
+  // UPDATE
   nameUpdate: string = '';
   bornUpdate: number | null = null;
   accomplishmentUpdate: string | null = null;
 
   querySnapshot: any;
+
+  // READ collecion
   scientists: Scientist[] = [];
+  // OBSERVE
   scientist$: Observable<Scientist[]>;
+  charle$: Scientist  = {
+    name: null,
+    born: null,
+    accomplishment: null
+  };
+  unsubCharle$: any;
 
   selection: string = '';
-  selectionUpdate: string = '';
   documentID: string = '';
   docSnap: any;
 
+  // READ document
   singleDoc: Scientist = {
     name: null,
     born: null,
     accomplishment: null
   }
 
-  q: any;
+
+  setDoc: Scientist = {
+    name: null,
+    born: null,
+    accomplishment: null
+  }
+
   deleteID: string = '';
   deleteIDarray: string[] = [];
 
+  whenBorn: string = '1700';
+
   constructor(public firestore: Firestore) {
-    const myCollection = collection(firestore, 'scientists');
-    this.scientist$ = collectionData(myCollection);
+    // OBSERVER
+    this.scientist$ = collectionData(collection(firestore, 'scientists')); // collection listener
+    this.unsubCharle$ = onSnapshot(doc(firestore, 'scientists', 'Charles Babbage'), (snapshot: any) => { // document listener
+        this.charle$.name = snapshot.data().name;
+        this.charle$.born = snapshot.data().born;
+        this.charle$.accomplishment = snapshot.data().accomplishment;
+    });
   }
 
+  // OBSERVER document listener
+  detachListener() {
+    this.unsubCharle$();
+  }
+
+  // CREATE add()
   async onCreate() {
     try {
       const docRef = await addDoc(collection(this.firestore, 'scientists'), {
@@ -1062,7 +1113,6 @@ export class AppComponent {
         born: this.born,
         accomplishment: this.accomplishment
       });
-      console.log("Document written with ID: ", docRef.id);
       this.name = null;
       this.born = null;
       this.accomplishment = null;
@@ -1071,6 +1121,7 @@ export class AppComponent {
     }
   }
 
+  // CREATE set()
   async onSet() {
     try {
       await setDoc(doc(this.firestore, 'scientists', this.nameSet), {
@@ -1086,57 +1137,72 @@ export class AppComponent {
     }
   }
 
-  async getData() {
-    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
-    this.querySnapshot.forEach((document: any) => {
-      this.scientists.push(document.data());
-    });
-  }
-
-  async onSelect() {
-    console.log(this.selectionUpdate);
-    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selectionUpdate));
-    this.querySnapshot = await getDocs(this.q);
-    this.querySnapshot.forEach((document: any) => {
-      console.log(document.id, ' => ', document.data());
-      this.nameUpdate = document.data().name;
-      this.bornUpdate = document.data().born;
-      this.accomplishmentUpdate = document.data().accomplishment;
-    });
-  }
-
-  async onUpdate() {
-    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.nameUpdate));
-    this.querySnapshot = await getDocs(this.q);
-    this.querySnapshot.forEach((document: any) => {
-      console.log(document.id, ' => ', document.data());
-      this.nameUpdate = document.id;
-    });
-    await updateDoc(doc(this.firestore, 'scientists', this.nameUpdate), {
-      born: this.bornUpdate,
-      accomplishment: this.accomplishmentUpdate,
-    });
-    this.bornUpdate = null;
-    this.accomplishmentUpdate = null;
-  }
-
-  async onDelete() {
-    console.log(this.selection);
-    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
-    this.querySnapshot = await getDocs(this.q);
-    this.querySnapshot.forEach((document: any) => {
-      console.log(document.id, ' => ', document.data());
-      deleteDoc(doc(this.firestore, 'scientists', document.id));
-    });
-  }
-
-  async detachListener() {
-    console.log("This function doesn't work.");
-  }
-
+  // READ document
   async getDocument() {
-    this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.documentID));
-    this.singleDoc = this.docSnap.data();
+    try {
+      this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.documentID));
+      this.singleDoc = this.docSnap.data();
+    } catch (error) {
+      console.error(error);
+    }
   }
+
+  // READ collection
+  async getData() {
+    try {
+      this.scientists = []; // clear view
+      this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('born', '>=', this.whenBorn)));
+      this.querySnapshot.forEach((docElement: any) => {
+        this.scientists.push(docElement.data());
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // UPDATE
+  async onSelect(event: any) { // type Event doesn't work despite https://angular.io/guide/event-binding-concepts
+    try {
+      this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('name', '==', event.target.value))); // query the database
+      this.querySnapshot.forEach((docElement: any) => { // itereate through the collection
+        this.nameUpdate = docElement.data().name; // transfer to local variables
+        this.bornUpdate = docElement.data().born;
+        this.accomplishmentUpdate = docElement.data().accomplishment;
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // UPDATE
+  async onUpdate() {
+    try {
+      this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('name', '==', this.nameUpdate))); // find the document by the name property instead of the document identifier because we're using both autogenerated document identifiers and custom document identifiers
+      this.querySnapshot.forEach((docElement: any) => { // iterate through the collection to find the document identifier for the selected document
+        this.nameUpdate = docElement.id; // put the document identifier in a local variable
+      });
+      await updateDoc(doc(this.firestore, 'scientists', this.nameUpdate), { // update the database
+        born: this.bornUpdate,
+        accomplishment: this.accomplishmentUpdate,
+      });
+      this.bornUpdate = null; // clear form field
+      this.accomplishmentUpdate = null; // clear form field
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // DELETE
+  async onDelete() {
+    try {
+      this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('name', '==', this.selection))); // get a collection of documents filtered by the query
+      this.querySnapshot.forEach((docElement: any) => { // iterate through the collection
+        deleteDoc(doc(this.firestore, 'scientists', docElement.id)); // delete all documents that match the query
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
 }
 ```
