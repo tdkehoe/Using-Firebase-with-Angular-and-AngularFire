@@ -6,7 +6,7 @@ This project uses Angular 14, AngularFire 7.4, and Firestore Web version 9 (modu
 
 Firestore Web version 9 is a big advance. Load time is reduced by as much as 80%. I like that the documentation is written with `async await` instead of promises.
 
-I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is taught. 
+I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is used, to make the code easier to understand.
 
 ### Collections and documents
 
@@ -27,6 +27,7 @@ Grace Hopper, born 1906: Devised the first machine-independent programming langu
 Alan Turing, born 1912: First theorized computers with memory and instructions, i.e., general-purpose computers
 Donald Knuth, born 1938: Father of algorithm analysis
 Lynn Ann Conway, born 1938: Invented generalized dynamic instruction handling
+Shafi Goldwasser, born 1958: Crypography and blockchain
 Jeff Dean, born 1968: Google's smartest computer scientist
 ```
 
@@ -210,7 +211,7 @@ Now we'll add a handler function to write the data to database.
 ```ts
 async onCreate() {
     try {
-      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
+      const docRef = await addDoc(collection(this.firestore, 'Scientists'), {
         name: this.name,
         born: this.born,
         accomplishment: this.accomplishment
@@ -239,7 +240,7 @@ Notice that Charles Babbage is still in your HTML form fields. Lets's clear that
 ```ts
   async onCreate() {
     try {
-      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
+      const docRef = await addDoc(collection(this.firestore, 'Scientists'), {
         name: this.name,
         born: this.born,
         accomplishment: this.accomplishment
@@ -301,7 +302,7 @@ Add the handler function in the controller. Note the third parameter of `setDoc(
 ```ts
   async onSet() {
     try {
-      await setDoc(doc(this.firestore, 'scientists', this.nameSet), {
+      await setDoc(doc(this.firestore, 'Scientists', this.nameSet), {
         name: this.nameSet,
         born: this.bornSet,
         accomplishment: this.accomplishmentSet
@@ -401,7 +402,7 @@ Make the handler function.
 
 ```ts
 async getDocument() {
-    this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.documentID));
+    this.docSnap = await getDoc(doc(this.firestore, 'Scientists', this.documentID));
     this.docSnapName = this.docSnap.data().name;
     this.docSnapBorn = this.docSnap.data().born;
     this.documentID = this.docSnap.data().accomplishment;
@@ -422,7 +423,7 @@ Simplfy the handler function:
 
 ```ts
 async getDocument() {
-    this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.documentID));
+    this.docSnap = await getDoc(doc(this.firestore, 'Scientists', this.documentID));
     this.singleDoc = this.docSnap.data();
 }
 ```
@@ -432,6 +433,58 @@ And display the data:
 ```html
 {{ singleDoc.name }}, born {{ singleDoc.born }}: {{ singleDoc.accomplishment }}
 ```
+
+## READ nested document
+
+In your Firebase console, make a new document in your `Scientists` collection. Call it `nest`, with one field `name: nest`. In the `nest` document make a sub-collection `Nested`. Note that we're using Uppercase for collections and lowercase for documents with subcollections.
+
+Add one document to your `Nested` subcollection from the Firebase console.
+
+Add some variables to your controller:
+
+```ts
+nestedScientist$: Observable<Scientist[]>;
+nestedDocumentID: string = '';
+
+nestedDoc: Scientist = {
+    name: null,
+    born: null,
+    accomplishment: null
+}
+```
+
+Add a handler function to your controller:
+
+```ts
+async getNested() {
+    try {
+      this.docSnap = await getDoc(doc(this.firestore, 'Scientists/nest/Nested', this.nestedDocumentID));
+      this.nestedDoc = this.docSnap.data();
+    } catch (error) {
+      console.error(error);
+    }
+}
+```
+
+Put the nested document in the view:
+
+```html
+<h3 ng>Read (nested document, once)</h3>
+
+<form (ngSubmit)="getNested()">
+    <select name="nested" [(ngModel)]="nestedDocumentID">
+        <option *ngFor="let scientist of nestedScientist$ | async" [ngValue]="scientist.name">
+            {{ scientist.name }}
+        </option>
+    </select>
+
+    <button type="submit" value="Submit">Get Nested</button>
+</form>
+
+<div *ngIf="nestedDoc.name">{{ nestedDoc.name }}, born {{ nestedDoc.born }}: {{ nestedDoc.accomplishment }}</div>
+```
+
+You should be able to select a nested computer scientist and then see the results in the view. We won't make a CREATE, UPDATE, or DELETE for the nested data.
 
 ## READ collection in the controller
 
@@ -446,7 +499,7 @@ and a handler function:
 ```ts
 async getData() {
     console.log("Getting data!");
-    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
+    this.querySnapshot = await getDocs(collection(this.firestore, 'Scientists'));
     this.querySnapshot.forEach((document: any) => {
       console.log(`${document.id} => ${document.data().name}`);
     });
@@ -463,7 +516,7 @@ Let's display this data in the HTML form. Make an array and push the scientists 
 
 ```ts
   async getData() {
-    this.querySnapshot = await getDocs(collection(this.firestore, 'scientists'));
+    this.querySnapshot = await getDocs(collection(this.firestore, 'Scientists'));
     this.querySnapshot.forEach((document: any) => {
       console.log(`${document.id} => ${document.data().name}`);
       this.scientists.push(document.data());
@@ -539,7 +592,7 @@ And make a query in the handler function:
 ```ts
 async getData() {
     this.scientists = []; // clear view
-    this.q = query(collection(this.firestore, 'scientists'), where('born', '>=', this.whenBorn));
+    this.q = query(collection(this.firestore, 'Scientists'), where('born', '>=', this.whenBorn));
     this.querySnapshot = await getDocs(this.q);
     this.querySnapshot.forEach((docElement: any) => {
       this.scientists.push(docElement.data());
@@ -573,7 +626,7 @@ The observer is one line in the `constructor`:
 
 ```ts
  constructor(public firestore: Firestore) {
-    this.scientist$ = collectionData(collection(firestore, 'scientists'));
+    this.scientist$ = collectionData(collection(firestore, 'Scientists'));
   }
 ```
 
@@ -611,8 +664,8 @@ Then make the listener in the `constructor`:
 
 ```ts
 constructor(public firestore: Firestore) {
-    this.scientist$ = collectionData(collection(firestore, 'scientists')); // collection listenr
-    this.unsubCharle$ = onSnapshot(doc(firestore, 'scientists', 'Charles Babbage'), (snapshot: any) => { // document listener
+    this.scientist$ = collectionData(collection(firestore, 'Scientists')); // collection listenr
+    this.unsubCharle$ = onSnapshot(doc(firestore, 'Scientists', 'Charles Babbage'), (snapshot: any) => { // document listener
         this.charle$.name = snapshot.data().name;
         this.charle$.born = snapshot.data().born;
         this.charle$.accomplishment = snapshot.data().accomplishment;
@@ -687,7 +740,7 @@ Then make a handler function.
 
 ```ts
 async onDelete() {
-    await deleteDoc(doc(this.firestore, 'scientists', this.selection));
+    await deleteDoc(doc(this.firestore, 'Scientists', this.selection));
     this.selection = '';
 }
 ```
@@ -720,11 +773,11 @@ Now we'll make the handler function. Let's make a smelly function first:
 ```ts
 async onDelete() {
     console.log(this.selection);
-    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
+    this.q = query(collection(this.firestore, 'Scientists'), where('name', '==', this.selection));
     this.querySnapshot = await getDocs(this.q);
     this.querySnapshot.forEach((doc: any) => {
       console.log(doc.id, ' => ', doc.data());
-      deleteDoc(doc(this.firestore, 'scientists', doc.id));
+      deleteDoc(doc(this.firestore, 'Scientists', doc.id));
     });
 }
 ```
@@ -732,7 +785,7 @@ async onDelete() {
 Do you see the problem? Look at this line:
 
 ```ts
-deleteDoc(doc(this.firestore, 'scientists', doc.id));
+deleteDoc(doc(this.firestore, 'Scientists', doc.id));
 ```
 
 `doc` is both a Firestore module and the elements in the array being iterated. We can use an alias for the module `doc`:
@@ -748,11 +801,11 @@ We'll have change the name of the elements in the array from `doc` to `docElemen
 ```ts
 async onDelete() {
     console.log(this.selection);
-    this.q = query(collection(this.firestore, 'scientists'), where('name', '==', this.selection));
+    this.q = query(collection(this.firestore, 'Scientists'), where('name', '==', this.selection));
     this.querySnapshot = await getDocs(this.q);
     this.querySnapshot.forEach((docElement: any) => {
       console.log(docElement.id, ' => ', docElement.data());
-      deleteDoc(doc(this.firestore, 'scientists', document.id));
+      deleteDoc(doc(this.firestore, 'Scientists', document.id));
     });
 }
 ```
@@ -822,7 +875,7 @@ Add the handler functions:
 ```ts
 // UPDATE
 async onSelect(event: any) { // type Event doesn't work despite https://angular.io/guide/event-binding-concepts
-    this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('name', '==', event.target.value))); // query the database
+    this.querySnapshot = await getDocs(query(collection(this.firestore, 'Scientists'), where('name', '==', event.target.value))); // query the database
     this.querySnapshot.forEach((docElement: any) => { // itereate through the collection
       this.nameUpdate = docElement.data().name; // transfer to local variables
       this.bornUpdate = docElement.data().born;
@@ -832,11 +885,11 @@ async onSelect(event: any) { // type Event doesn't work despite https://angular.
 
 // UPDATE
 async onUpdate() {
-    this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('name', '==', this.nameUpdate))); // find the document by the name property instead of the document identifier because we're using both autogenerated document identifiers and custom document identifiers
+    this.querySnapshot = await getDocs(query(collection(this.firestore, 'Scientists'), where('name', '==', this.nameUpdate))); // find the document by the name property instead of the document identifier because we're using both autogenerated document identifiers and custom document identifiers
     this.querySnapshot.forEach((docElement: any) => { // iterate through the collection to find the document identifier for the selected document
       this.nameUpdate = docElement.id; // put the document identifier in a local variable
     });
-    await updateDoc(doc(this.firestore, 'scientists', this.nameUpdate), { // update the database
+    await updateDoc(doc(this.firestore, 'Scientists', this.nameUpdate), { // update the database
       born: this.bornUpdate,
       accomplishment: this.accomplishmentUpdate,
     });
@@ -1092,8 +1145,8 @@ export class AppComponent {
 
   constructor(public firestore: Firestore) {
     // OBSERVER
-    this.scientist$ = collectionData(collection(firestore, 'scientists')); // collection listener
-    this.unsubCharle$ = onSnapshot(doc(firestore, 'scientists', 'Charles Babbage'), (snapshot: any) => { // document listener
+    this.scientist$ = collectionData(collection(firestore, 'Scientists')); // collection listener
+    this.unsubCharle$ = onSnapshot(doc(firestore, 'Scientists', 'Charles Babbage'), (snapshot: any) => { // document listener
         this.charle$.name = snapshot.data().name;
         this.charle$.born = snapshot.data().born;
         this.charle$.accomplishment = snapshot.data().accomplishment;
@@ -1108,7 +1161,7 @@ export class AppComponent {
   // CREATE add()
   async onCreate() {
     try {
-      const docRef = await addDoc(collection(this.firestore, 'scientists'), {
+      const docRef = await addDoc(collection(this.firestore, 'Scientists'), {
         name: this.name,
         born: this.born,
         accomplishment: this.accomplishment
@@ -1124,7 +1177,7 @@ export class AppComponent {
   // CREATE set()
   async onSet() {
     try {
-      await setDoc(doc(this.firestore, 'scientists', this.nameSet), {
+      await setDoc(doc(this.firestore, 'Scientists', this.nameSet), {
         name: this.nameSet,
         born: this.bornSet,
         accomplishment: this.accomplishmentSet
@@ -1140,7 +1193,7 @@ export class AppComponent {
   // READ document
   async getDocument() {
     try {
-      this.docSnap = await getDoc(doc(this.firestore, 'scientists', this.documentID));
+      this.docSnap = await getDoc(doc(this.firestore, 'Scientists', this.documentID));
       this.singleDoc = this.docSnap.data();
     } catch (error) {
       console.error(error);
@@ -1151,7 +1204,7 @@ export class AppComponent {
   async getData() {
     try {
       this.scientists = []; // clear view
-      this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('born', '>=', this.whenBorn)));
+      this.querySnapshot = await getDocs(query(collection(this.firestore, 'Scientists'), where('born', '>=', this.whenBorn)));
       this.querySnapshot.forEach((docElement: any) => {
         this.scientists.push(docElement.data());
       });
@@ -1163,7 +1216,7 @@ export class AppComponent {
   // UPDATE
   async onSelect(event: any) { // type Event doesn't work despite https://angular.io/guide/event-binding-concepts
     try {
-      this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('name', '==', event.target.value))); // query the database
+      this.querySnapshot = await getDocs(query(collection(this.firestore, 'Scientists'), where('name', '==', event.target.value))); // query the database
       this.querySnapshot.forEach((docElement: any) => { // itereate through the collection
         this.nameUpdate = docElement.data().name; // transfer to local variables
         this.bornUpdate = docElement.data().born;
@@ -1177,11 +1230,11 @@ export class AppComponent {
   // UPDATE
   async onUpdate() {
     try {
-      this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('name', '==', this.nameUpdate))); // find the document by the name property instead of the document identifier because we're using both autogenerated document identifiers and custom document identifiers
+      this.querySnapshot = await getDocs(query(collection(this.firestore, 'Scientists'), where('name', '==', this.nameUpdate))); // find the document by the name property instead of the document identifier because we're using both autogenerated document identifiers and custom document identifiers
       this.querySnapshot.forEach((docElement: any) => { // iterate through the collection to find the document identifier for the selected document
         this.nameUpdate = docElement.id; // put the document identifier in a local variable
       });
-      await updateDoc(doc(this.firestore, 'scientists', this.nameUpdate), { // update the database
+      await updateDoc(doc(this.firestore, 'Scientists', this.nameUpdate), { // update the database
         born: this.bornUpdate,
         accomplishment: this.accomplishmentUpdate,
       });
@@ -1195,9 +1248,9 @@ export class AppComponent {
   // DELETE
   async onDelete() {
     try {
-      this.querySnapshot = await getDocs(query(collection(this.firestore, 'scientists'), where('name', '==', this.selection))); // get a collection of documents filtered by the query
+      this.querySnapshot = await getDocs(query(collection(this.firestore, 'Scientists'), where('name', '==', this.selection))); // get a collection of documents filtered by the query
       this.querySnapshot.forEach((docElement: any) => { // iterate through the collection
-        deleteDoc(doc(this.firestore, 'scientists', docElement.id)); // delete all documents that match the query
+        deleteDoc(doc(this.firestore, 'Scientists', docElement.id)); // delete all documents that match the query
       });
     } catch (error) {
       console.error(error);
