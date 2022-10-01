@@ -1,6 +1,6 @@
 # Using Firebase with Angular and AngularFire
 
-This tutorial will make a simple Angular CRUD--CREATE, READ, UPDATE, DELETE--app that uses Google's Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
+This tutorial will make a simple Angular CRUD (CREATE, READ, UPDATE, DELETE) app that uses Google's Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
 
 This project uses Angular 14, AngularFire 7.4, and Firestore Web version 9 (modular). 
 
