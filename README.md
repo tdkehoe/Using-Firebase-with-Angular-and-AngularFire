@@ -158,8 +158,8 @@ Open `/src/app/app.component.ts` and import three AngularFire modules.
 import { Component } from '@angular/core';
 import { Firestore } from '@angular/fire/firestore';
 
-// Firebase Lite
-import { collection, addDoc } from '@firebase/firestore/lite';
+// AngularFire
+import { collection, addDoc } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-root',
