@@ -169,7 +169,7 @@ import { collection, addDoc } from '@angular/fire/firestore';
 export class AppComponent {
   title = 'GreatestComputerScientists';
 
-  constructor() {}
+  constructor(public firestore: Firestore) {}
 }
 ```
 
