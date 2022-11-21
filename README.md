@@ -966,6 +966,25 @@ set({data: 12345}, {merge: true})
 
 This will update fields in the document or create it if it doesn't exists. In contrast, `update()` will update fields but will fail if the document doesn't exist. You might call this "updateOrCreate()".
 
+Looking through code that I wrote a few years ago I found this:
+
+```js
+      if (doc.exists) {
+          return admin.firestore().collection('Dictionaries').doc(longLanguage).update({ tokenDownloadURLs: downloadURLs })
+          .then() // do nothing
+          .catch(error => console.error(error));
+        } else {
+          return admin.firestore().collection('Dictionaries').doc(longLanguage).set({ tokenDownloadURLs: downloadURLs })
+          .then() // do nothing
+          .catch(error => console.error(error));
+        } // close else
+      })
+```
+
+In other words, if the document exists, run `update()`; else run `set()`. Now I can write the same code
+
+
+
 ## UPDATE collections
 
 Can't do that from anywhere.
