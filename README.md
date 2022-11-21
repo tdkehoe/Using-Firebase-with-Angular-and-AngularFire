@@ -974,7 +974,7 @@ Can't do that from anywhere.
 
 There's a few things that I either don't understand of Firebase can't do.
 
-### `any` ype for returned collections and documents, $events, snapshot
+### `any` type for returned collections and documents, $events, snapshot
 
 The TypeScript gods hate it when we use `any` but collections and documents returned from Firestore are type `any`, as far as I know. You send data to Firestore as a `Scientist` custom type but it comes back as a document in which the data is now `document.data`, i.e., Firestore puts a container around your data. The other stuff Firestore returns, including `$event` and `snapshot`, also have to be typed `any`. (I tried typing `$event` as `Event` but this threw an error.)
 
