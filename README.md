@@ -342,6 +342,16 @@ You should see different results. `add()` created a new record for Howard Aiken'
 * Third parameter in `setDoc(doc())` for document identifier.
 * Document identifier can't be null. Note that we initialized `nameSet` with an empty string `''`, not `null`.
  
+### `set({}, {merge: true})`
+
+`set()` will overwrite a document or create it if it doesn't exist yet. Another option is to add the `{merge: true}`:
+
+```js
+set({data: 12345}, {merge: true})
+```
+
+This will update fields in the document or create it if it doesn't exists. In contrast, `update()` will update fields but will fail if the document doesn't exist. We'll go over this again in the `update()` section.
+ 
 ## CREATE collections
 
 You, as admin, can create collections in the Firebase console or the CLI. Your users can't create collections from a web app.
@@ -901,6 +911,16 @@ async onUpdate() {
 We have two handler functions, making UPDATE more complex than the other CRUD features. `onSelect()` fires when the user selects a compputer scientist, then quieries the database to fill in the year and the accomplishment. The user then updates one or both fields and clicks the button that fires `onUpdate()`. This handler fucntion queries the database to find the document by the `name` property and return the document identifier. We could eliminate this code if we used a data structure in which the document identifier always matched the `name` property.
 
 When we have the document identifier we then run `updateDoc()` to update the database.
+
+### `update()` vs. `set({}, {merge: true})`
+
+As we learned earlier, `set()` will overwrite a document or create it if it doesn't exist yet. But we can append `{merge: true}` to `set()`:
+
+```js
+set({data: 12345}, {merge: true})
+```
+
+This will update fields in the document or create it if it doesn't exists. In contrast, `update()` will update fields but will fail if the document doesn't exist. You might call this "updateOrCreate()".
 
 ## UPDATE collections
 
