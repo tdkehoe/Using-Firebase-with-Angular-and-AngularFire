@@ -54,7 +54,7 @@ This project uses Angular 14, AngularFire 7.4, and Firestore Web version 9 (modu
 
 Firestore Web version 9 is a big advance. Load time is reduced by as much as 80%. I like that the documentation is written with `async await` instead of promises.
 
-I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is used, to make the code easier to understand.
+I assume that you know the basics of Angular (nothing advanced is required). No Material or CSS is used, to make the code easier to understand.
 
 ## Collections and documents
 
