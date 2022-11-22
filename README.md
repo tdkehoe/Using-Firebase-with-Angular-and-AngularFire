@@ -1,48 +1,52 @@
 # Using Firebase with Angular and AngularFire
 
 - [Using Firebase with Angular and AngularFire](#using-firebase-with-angular-and-angularfire)
-    - [Collections and documents](#collections-and-documents)
-  - [Create a new project](#create-a-new-project)
-    - [Install AngularFire and Firebase](#install-angularfire-and-firebase)
-    - [Add Firebase config to `environments` variable](#add-firebase-config-to-environments-variable)
-    - [Setup `@NgModule` for the `AngularFireModule`](#setup-ngmodule-for-the-angularfiremodule)
-    - [Inject `AngularFirestore` into Component Controller](#inject-angularfirestore-into-component-controller)
-    - [Make the HTML view](#make-the-html-view)
-  - [Add data to Firestore with `add()`](#add-data-to-firestore-with-add)
-    - [Clear form fields](#clear-form-fields)
-  - [Add data to Firestore with `set()`](#add-data-to-firestore-with-set)
-    - [Coding differences between `add()` and `set()`](#coding-differences-between-add-and-set)
-    - [`set({}, {merge: true})`](#set-merge-true)
+  - [Collections and documents](#collections-and-documents)
+- [Start a new project](#start-a-new-project)
+  - [Install AngularFire and Firebase](#install-angularfire-and-firebase)
+  - [Add Firebase config to `environments` variable](#add-firebase-config-to-environments-variable)
+  - [Setup `@NgModule` for the `AngularFireModule`](#setup-ngmodule-for-the-angularfiremodule)
+  - [Inject `AngularFirestore` into Component Controller](#inject-angularfirestore-into-component-controller)
+  - [Make the HTML view](#make-the-html-view)
+- [CREATE data in Firestore with `add()`](#create-data-in-firestore-with-add)
+  - [Clear form fields](#clear-form-fields)
+- [CREATE data in Firestore with `set()`](#create-data-in-firestore-with-set)
+  - [Differences between `add()` and `set()`](#differences-between-add-and-set)
+  - [`set({}, {merge: true})`](#set-merge-true)
   - [CREATE collections](#create-collections)
+- [READ data from Firestore](#read-data-from-firestore)
   - [READ document in the view](#read-document-in-the-view)
   - [READ document in the controller](#read-document-in-the-controller)
   - [READ nested document](#read-nested-document)
   - [READ collection in the controller](#read-collection-in-the-controller)
-    - [Displaying the data](#displaying-the-data)
-    - [Filter with `query` and `where`](#filter-with-query-and-where)
-    - [Order and limit data](#order-and-limit-data)
-    - [Using the Firebase data converter to make custom objects](#using-the-firebase-data-converter-to-make-custom-objects)
-  - [OBSERVE a collection listener in the controller](#observe-a-collection-listener-in-the-controller)
-    - [OBSERVE a collection listener in the view](#observe-a-collection-listener-in-the-view)
-    - [OBSERVE a document listener in the controller](#observe-a-document-listener-in-the-controller)
-    - [OBSERVE a document listener in the view](#observe-a-document-listener-in-the-view)
-    - [Detach a listener](#detach-a-listener)
+  - [Displaying the data](#displaying-the-data)
+  - [Filter with `query` and `where`](#filter-with-query-and-where)
+  - [Order and limit data](#order-and-limit-data)
+  - [Using the Firebase data converter to make custom objects](#using-the-firebase-data-converter-to-make-custom-objects)
+- [OBSERVE a collection listener in the controller](#observe-a-collection-listener-in-the-controller)
+  - [OBSERVE a collection listener in the view](#observe-a-collection-listener-in-the-view)
+  - [OBSERVE a document listener in the controller](#observe-a-document-listener-in-the-controller)
+  - [OBSERVE a document listener in the view](#observe-a-document-listener-in-the-view)
+  - [Detach a document listener](#detach-a-document-listener)
+  - [Detach a collection listener](#detach-a-collection-listener)
+- [DELETE data from Firestore](#delete-data-from-firestore)
   - [DELETE in the view](#delete-in-the-view)
   - [DELETE in the controller](#delete-in-the-controller)
-    - [DELETE by auto-generated document identifier](#delete-by-auto-generated-document-identifier)
-    - [DELETE fields, collections, and subcollections](#delete-fields-collections-and-subcollections)
+  - [DELETE by auto-generated document identifier](#delete-by-auto-generated-document-identifier)
+  - [DELETE fields, collections, and subcollections](#delete-fields-collections-and-subcollections)
+- [UPDATE data in Firestore](#update-data-in-firestore)
   - [UPDATE in the view](#update-in-the-view)
   - [UPDATE in the controller](#update-in-the-controller)
-    - [`update()` vs. `set({}, {merge: true})`](#update-vs-set-merge-true)
+  - [`update()` vs. `set({}, {merge: true})`](#update-vs-set-merge-true)
   - [UPDATE collections](#update-collections)
-  - [To Do: Stuff I don't understand](#to-do-stuff-i-dont-understand)
-    - [`any` type for returned collections and documents, $events, snapshot](#any-type-for-returned-collections-and-documents-events-snapshot)
-    - [`unsubscribe()` from collections listener](#unsubscribe-from-collections-listener)
-  - [Complete finished code](#complete-finished-code)
-    - [`environments/environment.ts`](#environmentsenvironmentts)
-    - [`app.module.ts`](#appmodulets)
-    - [`app.component.html`](#appcomponenthtml)
-    - [`app.component.ts`](#appcomponentts)
+- [Stuff I don't understand](#stuff-i-dont-understand)
+  - [`any` type for returned collections and documents, $events, snapshot](#any-type-for-returned-collections-and-documents-events-snapshot)
+  - [`unsubscribe()` from collections listener](#unsubscribe-from-collections-listener)
+- [Complete finished code](#complete-finished-code)
+  - [`environments/environment.ts`](#environmentsenvironmentts)
+  - [`app.module.ts`](#appmodulets)
+  - [`app.component.html`](#appcomponenthtml)
+  - [`app.component.ts`](#appcomponentts)
 
 This tutorial will make a simple Angular CRUD (CREATE, READ, UPDATE, DELETE) app that uses Google's Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
 
@@ -52,7 +56,7 @@ Firestore Web version 9 is a big advance. Load time is reduced by as much as 80%
 
 I assume that you know the basics of Angular (nothing advanced is required). No CSS or styling is used, to make the code easier to understand.
 
-### Collections and documents
+## Collections and documents
 
 I assume that you know the [basics](https://firebase.google.com/docs/firestore) of Firebase's Firestore cloud database. In particular, this tutorial talks about `collections` and `documents`. This is essential. A `collection` is pretty much an array and a `document` is pretty much an object, just like in JavaScript. Firestore is structured with collections of documents. A document can contain a collection (a.k.a. a sub-collection), which contains further documents. This `collection`-`document`-`collection`-`document` pattern is maintained. 
 
@@ -75,7 +79,7 @@ Shafi Goldwasser, born 1958: Crypography and blockchain
 Jeff Dean, born 1968: Google's smartest computer scientist
 ```
 
-## Create a new project
+# Start a new project
 
 In your terminal:
 
@@ -93,7 +97,7 @@ ng serve -o
 
 Your browser should open to `localhost:4200`. You should see the Angular default homepage.
 
-### Install AngularFire and Firebase
+## Install AngularFire and Firebase
 
 Open another tab in your terminal and install AngularFire and Firebase from `npm`.
 
@@ -109,7 +113,7 @@ If this doesn't work, open your Firebase console and make a new project. Call it
 
 Create your Firestore database.
 
-### Add Firebase config to `environments` variable
+## Add Firebase config to `environments` variable
 
 Open the Firestore [Get started](https://firebase.google.com/docs/firestore/quickstart) section.
 
@@ -157,7 +161,7 @@ const app = initializeApp(firebaseConfig);
 
 We'll use AngularFire instead of these items. Click `Continue to console`.
 
-### Setup `@NgModule` for the `AngularFireModule`
+## Setup `@NgModule` for the `AngularFireModule`
 
 Open the [AngularFire documentation](https://github.com/angular/angularfire) for this section.
 
@@ -194,7 +198,7 @@ export class AppModule { }
 
 Keep an eye on the browser. If the homepage crashes, go back and see what's wrong.
 
-### Inject `AngularFirestore` into Component Controller
+## Inject `AngularFirestore` into Component Controller
 
 Open `/src/app/app.component.ts` and import three AngularFire modules.
 
@@ -217,7 +221,7 @@ export class AppComponent {
 }
 ```
 
-### Make the HTML view
+## Make the HTML view
 
 Now we'll make the view in `app.component.html`. Replace the placeholder view with:
 
@@ -246,7 +250,7 @@ Inside the form we have three text fields and a `Submit` button. The first text 
 
 Clicking the button executes `ngSubmit` and the function `onCreate()`.
 
-## Add data to Firestore with `add()`
+# CREATE data in Firestore with `add()`
 
 Open the [Add Data](https://firebase.google.com/docs/firestore/quickstart#add_data) section of the Firestore documentation.
 
@@ -277,7 +281,7 @@ accomplishment [string]: Built first computer
 
 Look in your Firestore console and you should see your data. Yay! Firebase is talking to your Angular app.
 
-### Clear form fields
+## Clear form fields
 
 Notice that Charles Babbage is still in your HTML form fields. Lets's clear that data so that the forms are ready for another entry.
 
@@ -299,7 +303,7 @@ Notice that Charles Babbage is still in your HTML form fields. Lets's clear that
   }
 ```
 
-## Add data to Firestore with `set()`
+# CREATE data in Firestore with `set()`
 
 Open the [Add data](https://firebase.google.com/docs/firestore/manage-data/add-data) section of the Firestore documentation.
 
@@ -380,13 +384,13 @@ Howard Aiken, 2000, First baby raised speaking only JavaScript
 
 You should see different results. `add()` created a new record for Howard Aiken's millenial great-grandchild. `set()` updated the original Howard Aiken record.
 
-### Coding differences between `add()` and `set()`
+## Differences between `add()` and `set()`
 
 * Import `doc` and `setDoc` modules.
 * Third parameter in `setDoc(doc())` for document identifier.
 * Document identifier can't be null. Note that we initialized `nameSet` with an empty string `''`, not `null`.
  
-### `set({}, {merge: true})`
+## `set({}, {merge: true})`
 
 `set()` will overwrite a document or create it if it doesn't exist yet. Another option is to add the `{merge: true}`:
 
@@ -399,11 +403,13 @@ This will update fields in the document or create it if it doesn't exists. In co
 ## CREATE collections
 
 You, as admin, can create collections in the Firebase console or the CLI. Your users can't create collections from a web app.
- 
-## READ document in the view
+
+# READ data from Firestore
  
 Open the [Get data once](https://firebase.google.com/docs/firestore/query-data/get-data) section of the Firestore documentation.
- 
+
+## READ document in the view
+
 In `app.component.html` add a button that allows you to select a computer scientist by name and then click a button to display their birthyear and accomplishment. Don't try to understand how the list of computer scientists gets into the `<select><option>`, we'll get to that in the `OBSERVE` section.
 
 ```html
@@ -564,7 +570,7 @@ The first line clears any old data in the view. This should display the names of
 
 Let's add `query where` to filter the results
 
-### Displaying the data
+## Displaying the data
 
 Let's display this data in the HTML form. Make an array and push the scientists into the array:
 
@@ -631,7 +637,7 @@ Also, let's clear any old data from the view:
     this.scientists = []; // clear view
 ```
 
-### Filter with `query` and `where`
+## Filter with `query` and `where`
 
 Make a variable:
 
@@ -656,15 +662,15 @@ async getData() {
 
 The user can now filter results to show only computer scientists born after 1700, 1800, or 1900.
 
-### Order and limit data
+## Order and limit data
 
 By default the data is ordered by the document identifier. You can [order your data differently or limit the number of documents](https://firebase.google.com/docs/firestore/query-data/order-limit-data) returned.
 
-### Using the Firebase data converter to make custom objects
+## Using the Firebase data converter to make custom objects
 
 I can't get the Firestore [data converter](https://firebase.google.com/docs/firestore/query-data/get-data#custom_objects) to work. It should convert downloaded documents into custom objects, e.g., `Scientist`, or convert objects to be uploaded to Firestore into a specific collection. 
 
-## OBSERVE a collection listener in the controller
+# OBSERVE a collection listener in the controller
 
 Open the [Listen for realtime updates](https://firebase.google.com/docs/firestore/query-data/listen) section of the Firestore documentation.
 
@@ -686,7 +692,7 @@ The observer is one line in the `constructor`:
 
 That's it. Now `scientist$` will always mirror the database. We have the observer in the `constructor` so that it starts when the page loads (`ngOnInit` would do more or less the same thing). An observer could instead go in a function to start after an event.
 
-### OBSERVE a collection listener in the view
+## OBSERVE a collection listener in the view
 
 In the HTML view, repeat the `*ngFor` data display, with three changes. First, no button. Second, change `scientists` to `scientist$`. Third, add the pipe `| async`.
 
@@ -701,7 +707,7 @@ In the HTML view, repeat the `*ngFor` data display, with three changes. First, n
 
 You should now see the data without clicking the button, and then the same data when you click the button. Add another record and watch it change in real time. Try to make MongoDB do that!
 
-### OBSERVE a document listener in the controller
+## OBSERVE a document listener in the controller
 
 We can also observe a single document. In the controller, make some variables:
 
@@ -729,14 +735,14 @@ constructor(public firestore: Firestore) {
 
 This makes two observers, the collection listener and the document listener.
 
-### OBSERVE a document listener in the view
+## OBSERVE a document listener in the view
 
 ```html
 <h3>Observe (single document, 'Charles Babbage')</h3>
 <div *ngIf="charle$.name">{{ charle$.name }}, born {{ charle$.born }}: {{ charle$.accomplishment}}</div>
 ```
 
-### Detach a listener
+## Detach a document listener
 
 When you no longer need to observe a collection, [detach the listener](https://firebase.google.com/docs/firestore/query-data/listen#detach_a_listener) to reduce your bandwidth.
 
@@ -755,7 +761,29 @@ async detachListener() {
 }
 ```
 
-I can't figure out how to detach the collection listener.
+## Detach a collection listener
+
+The `firestore.collection().onSnapshot()` function returns an unsubscribe function. You just call it to detach a collection listener:
+
+```js
+unsubscribe = firestore.collection("collection_name")
+  .onSnapshot(function(querySnapshot) {
+			querySnapshot.forEach(function(doc) {
+				if (doc && doc.exists) {
+					const myData = doc.data();
+					// DO SOMETHING
+				}
+			});
+		});
+
+unsubscribe(); // detaches the collection listener
+```
+
+I couldn't get this code to work.
+
+# DELETE data from Firestore
+
+One of my coding bootcamp classmates insisted "D" was for "DESTROY".
 
 ## DELETE in the view
 
@@ -801,7 +829,7 @@ async onDelete() {
 
 Works great...on the records that we entered with `set()`, where the document identifier is the same as the `name` field. That's a lesson in data structure: use `set()`, not `add()`, for records that may need to be deleted, and make a `name` or `identifier` field with the same document's identifier.
 
-### DELETE by auto-generated document identifier
+## DELETE by auto-generated document identifier
 
 Open [Perform simple and compound queries in Cloud Firestore](https://firebase.google.com/docs/firestore/query-data/queries) in the Firestore documentation. 
 
@@ -868,7 +896,7 @@ This will delete all documents with the selected name. My database had several `
 
 More about filtering queries with [where()](https://firebase.google.com/docs/firestore/query-data/queries).
 
-### DELETE fields, collections, and subcollections
+## DELETE fields, collections, and subcollections
 
 Our `DELETE` functions deletes documents. 
 
@@ -877,6 +905,10 @@ To delete fields in documents use [deleteField()](https://firebase.google.com/do
 If a field in a document is a collection, i.e., a subcollection, the documents in those subcollections won't be deleted with the parent document. You'll have to search for and delete each document in a subcollection, or delete the subcollection from the Firebase Console.
 
 You, as admin, can delete collections in the Firebase console or the CLI. Your users can't delete collections from a web app.
+
+# UPDATE data in Firestore
+
+`UPDATE` changes existing records without creating new records.
 
 ## UPDATE in the view
 
@@ -956,7 +988,7 @@ We have two handler functions, making UPDATE more complex than the other CRUD fe
 
 When we have the document identifier we then run `updateDoc()` to update the database.
 
-### `update()` vs. `set({}, {merge: true})`
+## `update()` vs. `set({}, {merge: true})`
 
 As we learned earlier, `set()` will overwrite a document or create it if it doesn't exist yet. But we can append `{merge: true}` to `set()`:
 
@@ -983,35 +1015,33 @@ Looking through code that I wrote a few years ago I found this:
 
 In other words, if the document exists, run `update()`; else run `set()`. Now I can write the same code
 
-
-
 ## UPDATE collections
 
 Can't do that from anywhere.
 
-## To Do: Stuff I don't understand
+# Stuff I don't understand
 
-There's a few things that I either don't understand of Firebase can't do.
+There's a few things that I either don't understand or Firebase can't do.
 
-### `any` type for returned collections and documents, $events, snapshot
+## `any` type for returned collections and documents, $events, snapshot
 
-The TypeScript gods hate it when we use `any` but collections and documents returned from Firestore are type `any`, as far as I know. You send data to Firestore as a `Scientist` custom type but it comes back as a document in which the data is now `document.data`, i.e., Firestore puts a container around your data. The other stuff Firestore returns, including `$event` and `snapshot`, also have to be typed `any`. (I tried typing `$event` as `Event` but this threw an error.)
+The TypeScript gods hate it when we use `any` but collections and documents returned from Firestore are type `any`, as far as I know. You send data to Firestore as a `Scientist` custom type but it comes back as a document in which the data is now `document.data`, i.e., Firestore puts a container around your data. The returned container includes metadata, `$event`, and `snapshot`. These also have to be typed `any`. (I tried typing `$event` as `Event` but this threw an error.)
 
 Maybe Firestore could provide a module with interfaces or types, `Collection` and `Document`, that we could use instead of `any`?
 
-Firestore has a [data converter feature to make custom objects](https://firebase.google.com/docs/firestore/manage-data/add-data#custom_objects) but I don't see how this will get rid of `any` here.
+Firestore has a [data converter feature to make custom objects](https://firebase.google.com/docs/firestore/manage-data/add-data#custom_objects) but I don't see how this will get rid of `any`.
 
-### `unsubscribe()` from collections listener
+## `unsubscribe()` from collections listener
 
-I couldn't get this code to work.
+As noted above, I couldn't get [`unsubscribe()` from collections listener](#unsubscribe-from-collections-listener) to work.
 
-## Complete finished code
+# Complete finished code
 
 Please send pull requests if you find mistakes.
 
 This Angular app has four modified files.
 
-### `environments/environment.ts`
+## `environments/environment.ts`
 
 ```ts
 export const environment = {
@@ -1027,7 +1057,7 @@ export const environment = {
 };
 ```
 
-### `app.module.ts`
+## `app.module.ts`
 
 ```ts
 import { NgModule } from '@angular/core';
@@ -1058,7 +1088,7 @@ import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 export class AppModule { }
 ```
 
-### `app.component.html`
+## `app.component.html`
 
 ```ts
 <h2>Greatest Computer Scientists</h2>
@@ -1152,7 +1182,7 @@ Show only computer scientists born after:
 </form>
 ```
 
-### `app.component.ts`
+## `app.component.ts`
 
 ```ts
 import { Component, OnInit } from '@angular/core';
