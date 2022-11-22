@@ -3,14 +3,14 @@
 - [Using Firebase with Angular and AngularFire](#using-firebase-with-angular-and-angularfire)
     - [Collections and documents](#collections-and-documents)
   - [Create a new project](#create-a-new-project)
-  - [Install AngularFire and Firebase](#install-angularfire-and-firebase)
-  - [Add Firebase config to `environments` variable](#add-firebase-config-to-environments-variable)
-  - [Setup `@NgModule` for the `AngularFireModule`](#setup-ngmodule-for-the-angularfiremodule)
-  - [Inject `AngularFirestore` into Component Controller](#inject-angularfirestore-into-component-controller)
-  - [Make the HTML view](#make-the-html-view)
+    - [Install AngularFire and Firebase](#install-angularfire-and-firebase)
+    - [Add Firebase config to `environments` variable](#add-firebase-config-to-environments-variable)
+    - [Setup `@NgModule` for the `AngularFireModule`](#setup-ngmodule-for-the-angularfiremodule)
+    - [Inject `AngularFirestore` into Component Controller](#inject-angularfirestore-into-component-controller)
+    - [Make the HTML view](#make-the-html-view)
   - [Add data to Firestore with `add()`](#add-data-to-firestore-with-add)
     - [Clear form fields](#clear-form-fields)
-    - [`set()` vs. `add()`](#set-vs-add)
+  - [Add data to Firestore with `set()`](#add-data-to-firestore-with-set)
     - [Coding differences between `add()` and `set()`](#coding-differences-between-add-and-set)
     - [`set({}, {merge: true})`](#set-merge-true)
   - [CREATE collections](#create-collections)
@@ -36,7 +36,7 @@
     - [`update()` vs. `set({}, {merge: true})`](#update-vs-set-merge-true)
   - [UPDATE collections](#update-collections)
   - [To Do: Stuff I don't understand](#to-do-stuff-i-dont-understand)
-    - [`any` ype for returned collections and documents, $events, snapshot](#any-ype-for-returned-collections-and-documents-events-snapshot)
+    - [`any` type for returned collections and documents, $events, snapshot](#any-type-for-returned-collections-and-documents-events-snapshot)
     - [`unsubscribe()` from collections listener](#unsubscribe-from-collections-listener)
   - [Complete finished code](#complete-finished-code)
     - [`environments/environment.ts`](#environmentsenvironmentts)
@@ -93,7 +93,7 @@ ng serve -o
 
 Your browser should open to `localhost:4200`. You should see the Angular default homepage.
 
-## Install AngularFire and Firebase
+### Install AngularFire and Firebase
 
 Open another tab in your terminal and install AngularFire and Firebase from `npm`.
 
@@ -109,7 +109,7 @@ If this doesn't work, open your Firebase console and make a new project. Call it
 
 Create your Firestore database.
 
-## Add Firebase config to `environments` variable
+### Add Firebase config to `environments` variable
 
 Open the Firestore [Get started](https://firebase.google.com/docs/firestore/quickstart) section.
 
@@ -157,7 +157,7 @@ const app = initializeApp(firebaseConfig);
 
 We'll use AngularFire instead of these items. Click `Continue to console`.
 
-## Setup `@NgModule` for the `AngularFireModule`
+### Setup `@NgModule` for the `AngularFireModule`
 
 Open the [AngularFire documentation](https://github.com/angular/angularfire) for this section.
 
@@ -194,7 +194,7 @@ export class AppModule { }
 
 Keep an eye on the browser. If the homepage crashes, go back and see what's wrong.
 
-## Inject `AngularFirestore` into Component Controller
+### Inject `AngularFirestore` into Component Controller
 
 Open `/src/app/app.component.ts` and import three AngularFire modules.
 
@@ -217,7 +217,7 @@ export class AppComponent {
 }
 ```
 
-## Make the HTML view
+### Make the HTML view
 
 Now we'll make the view in `app.component.html`. Replace the placeholder view with:
 
