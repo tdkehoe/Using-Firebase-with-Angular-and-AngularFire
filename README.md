@@ -724,7 +724,6 @@ Then make the listener in the `constructor`:
 
 ```ts
 constructor(public firestore: Firestore) {
-    this.scientist$ = collectionData(collection(firestore, 'Scientists')); // collection listenr
     this.unsubCharle$ = onSnapshot(doc(firestore, 'Scientists', 'Charles Babbage'), (snapshot: any) => { // document listener
         this.charle$.name = snapshot.data().name;
         this.charle$.born = snapshot.data().born;
