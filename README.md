@@ -745,7 +745,7 @@ This makes two observers, the collection listener and the document listener.
 
 When you no longer need to observe a collection, [detach the listener](https://firebase.google.com/docs/firestore/query-data/listen#detach_a_listener) to reduce your bandwidth.
 
-Detaching the document listener is easy:
+Detaching the document listener can be easy:
 
 ```html
 <form (ngSubmit)="detachListener()">
@@ -759,6 +759,30 @@ async detachListener() {
     this.unsubCharle$();
 }
 ```
+
+What's hard is to detach the listener programmatically, e.g., after an API returns data.
+
+### Listening to an API request
+
+A typical use for a listener is when you make a request to an API, then you have to wait for the data to come back before you use the data. Make the listener first, then make the API request. You could run into two problems.
+
+First, you can't put an async API request inside a listener. You'll get this error:
+
+```
+'await' expressions are only allowed within async functions and at the top levels of modules.ts(1308)
+```
+
+Nesting async calls is possible but tricky. What works for me is to make the listener first, then call the API, and hope that the listener starts before the API data comes back. This generally works but is a smelly solution.
+
+Second, you'll want to detach the listener after the API returns your data. But you can't put `this.unsubCharle$();` inside `this.unsubCharle$();`, that would be recursive. In other words, when I put `this.unsubCharle$();` anywhere in the listener, the listener is detached before the data comes back. The only solution I've found is to set a timer:
+
+```ts
+setTimeout(() => {
+   this.unsubCharle$();
+}, 60000); // delayed for one minute
+```
+
+That's a smelly solution. What if a user has a slow Internet connection and needs more than a minute to get the data? What if your users are on broadband and get their data back in a fraction of a second? 99% of the listeners' lives will be wasted, costing you speed and money.
 
 ## Detach a collection listener
 
