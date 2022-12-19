@@ -48,11 +48,9 @@
   - [`app.component.html`](#appcomponenthtml)
   - [`app.component.ts`](#appcomponentts)
 
-This tutorial will make a simple Angular CRUD (CREATE, READ, UPDATE, DELETE) app that uses Google's Firebase Firestore cloud database, plus we'll make an OBSERVE to display realtime updates.
+This tutorial will make a simple Angular CRUD (CREATE, READ, UPDATE, DELETE) app that uses Google's Firebase Firestore cloud database, plus we'll use OBSERVE to display realtime updates.
 
-This project uses Angular 14, AngularFire 7.4, and Firestore Web version 9 (modular). 
-
-Firestore Web version 9 is a big advance. Load time is reduced by as much as 80%. I like that the documentation is written with `async await` instead of promises.
+This project uses Angular 15, AngularFire 7.5, and Firestore Web version 9 (modular). 
 
 I assume that you know the basics of Angular (nothing advanced is required). No Material or CSS is used, to make the code easier to understand.
 
@@ -69,7 +67,7 @@ Here is the data (documents) we will use:
 ```
 Charles Babbage, born 1791: Built first computer
 Ada Lovelace, born 1815: Wrote first software
-Howard Aiken, 1900: Built IBM's Harvard Mark I electromechanical computer
+Howard Aiken, born 1900: Built IBM's Harvard Mark I electromechanical computer
 John von Neumann, born 1903: Built first general-purpose computer with memory and instructions
 Grace Hopper, born 1906: Devised the first machine-independent programming language.
 Alan Turing, born 1912: First theorized computers with memory and instructions, i.e., general-purpose computers
@@ -99,7 +97,7 @@ Your browser should open to `localhost:4200`. You should see the Angular default
 
 ## Install AngularFire and Firebase
 
-Open another tab in your terminal and install AngularFire and Firebase from `npm`.
+Open another tab in your terminal and install AngularFire and Firebase from `npm` in your project directory.
 
 ```bash
 ng add @angular/fire
@@ -197,6 +195,8 @@ export class AppModule { }
 ```
 
 Keep an eye on the browser. If the homepage crashes, go back and see what's wrong.
+
+Note the line with `initializeApp()`. This is the key to using Firebase and this line belongs in `app.module.ts`. It doesn't belong in your components or anywhere else.
 
 ## Inject `AngularFirestore` into Component Controller
 
