@@ -670,7 +670,7 @@ By default the data is ordered by the document identifier. You can [order your d
 
 I can't get the Firestore [data converter](https://firebase.google.com/docs/firestore/query-data/get-data#custom_objects) to work. It should convert downloaded documents into custom objects, e.g., `Scientist`, or convert objects to be uploaded to Firestore into a specific collection. 
 
-# OBSERVE a collection listener in the controller
+# OBSERVE: make a listener in the controller
 
 Open the [Listen for realtime updates](https://firebase.google.com/docs/firestore/query-data/listen) section of the Firestore documentation.
 
