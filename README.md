@@ -442,17 +442,17 @@ We're using `*ngIf` to hide the result before the user selects a scientist.
 
 ## READ document in the controller
 
-Import the `doc` and `getDoc` modules.
+Import the `doc` and `getDoc` modules and the `DocumentSnapshot` TypeScript type.
 
 ```ts
-import { doc, getDoc } from '@angular/fire/firestore';
+import { doc, DocumentSnapshot, getDoc } from '@angular/fire/firestore';
 ```
 
 Make some variables.
 
 ```ts
 documentID: string = '';
-docSnap: any;
+docSnap: DocumentSnapshot;
 docSnapName: string = '';
 docSnapBorn: number | null = null;
 docSnapAccomplishment: string = '';
@@ -463,11 +463,13 @@ Make the handler function.
 ```ts
 async getDocument() {
     this.docSnap = await getDoc(doc(this.firestore, 'Scientists', this.documentID));
-    this.docSnapName = this.docSnap.data().name;
+    this.docSnapName = this.docSnap.data().name; // this.docSnapName = this.docSnap.data()?.['name'];
     this.docSnapBorn = this.docSnap.data().born;
     this.documentID = this.docSnap.data().accomplishment;
 }
 ```
+
+The unusual syntax is because we're using the `DocumentSnapshot` type instead of `any`.
 
 Couldn't be simpler! Well, it could. Let's make a variable to hold the data:
 
