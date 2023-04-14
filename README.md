@@ -1134,7 +1134,7 @@ export class AppModule { }
     <button type="submit" value="Submit">Submit</button>
 </form>
 
-<h3 ng>Read (document, once)</h3>
+<h3>Read (document, once)</h3>
 
 <form (ngSubmit)="getDocument()">
     <select name="scientist" [(ngModel)]="documentID">
